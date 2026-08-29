@@ -17,6 +17,7 @@ data/raw/
 data/processed/*
 !data/processed/pl_player_values.csv
 !data/processed/pl_player_values_prethreshold.csv
+!data/processed/pl_matches_features.csv
 
 # --- credentials ------------------------------------------------------------
 # The Kaggle API token lives at ~/.kaggle/kaggle.json, which is OUTSIDE this

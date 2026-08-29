@@ -7,7 +7,7 @@ clustering.
 | # | Project | Technique | Status |
 |---|---------|-----------|--------|
 | 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
-| 02 | **match-predictor** | Classification | Planned |
+| 02 | **match-predictor** | Classification | Complete |
 | 03 | **style-finder** | K-Means clustering | Planned |
 
 ---
@@ -41,13 +41,14 @@ python -m kaggle datasets download -d davidcariboo/player-scores -p data/raw --u
 `python -m kaggle` rather than the bare `kaggle` command, because pip's
 user-level script directory is often not on PATH.
 
-Two derived tables **are** committed, so you can run the EDA, the models and
-the app without downloading anything:
+Derived tables **are** committed, so you can run the EDA, the models and the app
+without downloading anything:
 
-- `pl_player_values.csv` — 498 rows, the modelling table (≥900 PL minutes)
+- `pl_player_values.csv` — 498 rows, project 01's modelling table (≥900 PL minutes)
 - `pl_player_values_prethreshold.csv` — 661 rows, backs the app's player list
   so that below-threshold players can be shown *why* they get no prediction
   rather than silently not existing
+- `pl_matches_features.csv` — 4,616 rows, project 02's match table
 
 You only need `data/raw/` if you want to re-run `clean.py` or change a filter.
 
@@ -208,6 +209,126 @@ themselves influenced by reputation and hype.
 
 ---
 
+## 02-match-predictor
+
+Predicts Premier League Win/Draw/Loss from the home team's perspective, using
+only information knowable days before kickoff.
+
+```bash
+python 02-match-predictor/features.py      # raw CSVs -> 4,616-match table
+python 02-match-predictor/model.py         # 5 models x 2 CV schemes
+python 02-match-predictor/train_final.py   # fit shipping model -> model.joblib
+```
+
+### Result
+
+**Accuracy 0.470 ± 0.031** against a **0.446 always-predict-home-win baseline**
+(+0.024). **Macro F1 0.429.** Season-based expanding-window CV, 9 folds.
+
+| Model | Accuracy | vs baseline | Macro F1 | Draw recall |
+|-------|----------|-------------|----------|-------------|
+| Dummy (always home) | 0.446 ± 0.032 | — | 0.205 | 0.00 |
+| Logistic regression | **0.512** ± 0.036 | +0.066 | 0.416 | 0.11 |
+| LogReg, balanced | 0.422 ± 0.043 | −0.024 | 0.417 | 0.59 |
+| HistGradientBoosting | 0.476 ± 0.026 | +0.030 | 0.413 | 0.19 |
+| **HGB, balanced** *(shipped)* | 0.470 ± 0.031 | +0.024 | **0.429** | 0.26 |
+
+**Logistic regression is more accurate and is not what ships.** It earns its
+51.2% substantially by declining to predict draws — 317 draw predictions across
+2,967 test matches when 697 draws occurred. For a Win/Draw/Loss forecast, a model
+that has quietly reduced the problem to two classes is a worse product than a
+slightly less accurate one that attempts all three. HGB-balanced has the best
+macro F1, the metric that refuses to let draw-blindness hide, and still beats the
+baseline. A deliberate trade of 4.2 accuracy points.
+
+Results were checked under a second scheme (`TimeSeriesSplit(n_splits=5)`), which
+agrees on ordering and magnitude to within ~0.01. No conclusion here depends on
+where the fold boundaries fall.
+
+### Leakage: the thing this project is really about
+
+`games.csv` is booby-trapped, and the traps are not obvious.
+
+**`aggregate` is the final score as a string.** It equals `"{home_goals}:{away_goals}"`
+in 5,320 of 5,320 Premier League rows.
+
+**`home_club_position` is the league position *after* the match.** This one is
+subtle enough to be worth the detail. Position varies within a club-season — 6.74
+distinct values on average, only 1 of 280 club-seasons constant — which makes it
+look like legitimate point-in-time data. It is point-in-time; it is just the wrong
+point. Rebuilding the table at every date across 10,640 club-match rows and
+comparing:
+
+| Reconstruction | Agreement with the recorded column |
+|---|---|
+| Rank **including** the match | **69.4%** |
+| Rank **excluding** the match | 40.5% |
+
+A model given that column is being told, in part, whether the home team just won.
+League position is instead rebuilt from prior results only.
+
+**`club_games.is_win` cannot express a draw** — all 2,538 drawn club-games carry
+`is_win = 0`, identical to losses.
+
+**`attendance` and formation columns are excluded by choice.** Neither is caused by
+the result, but the prediction boundary here is "known days before kickoff", not
+"known at kickoff", and team sheets fail that test.
+
+### Features
+
+All derived from prior matches only; rolling windows are shifted by one so no match
+enters its own features. Rolling points, goals for/against over the last 5 and 10
+matches; separate home and away form; rebuilt pre-match league position; rest days
+computed across **all** competitions (a midweek cup tie is real fatigue); head-to-head
+history; season one-hot.
+
+Season form enters as **points per game**, not accumulated points. Raw totals
+correlate 0.761 with matchday — thirty points is top-four in October and mid-table in
+March. Per-game rates drop that to 0.022.
+
+The first 5 matchdays of each club-season are dropped rather than carrying form across
+the summer, costing 704 of 5,320 matches (13.2%).
+
+### Known limitations
+
+**The model has learned home advantage and relative form, and has learned nothing
+about draws.** Draw precision sits at 0.26 in every configuration tested. The balanced
+variants change only how *often* draws are guessed, not how well: LogReg-balanced lifts
+draw recall from 0.11 to 0.59 and falls *below* the dummy on accuracy, predicting 1,600
+draws where 697 occurred. Draws have no distinctive feature signature — they happen
+between evenly matched teams, which is a region of feature space rather than a
+direction in it.
+
+**The ceiling is low and this is near it.** Max eta-squared across every engineered
+feature is 0.132; nothing separates these classes strongly. Match outcomes are
+substantially irreducible without market odds or squad-strength signals. +2.4 points
+over baseline is a real but modest gain and is reported as such.
+
+**Multicollinearity is severe but harmless here.** Seven features exceed VIF 10, topping
+out at 31.7. Coefficients are not individually interpretable. An `l10`-only variant was
+tested and scored *worse* (0.507 vs 0.512), so the full feature set stands.
+
+**HGB overfits badly at library defaults** — in-sample accuracy 0.980 against
+cross-validated 0.470. The CV figure is unaffected and is the honest one, but the gap
+says the defaults are memorising 4,616 rows.
+
+**Home advantage is non-stationary.** It ranges 39% (2020, empty stadiums) to 50%
+(2016). Season dummies absorb the level shift. Notably, 2020 is where the models beat
+the dummy by the *widest* margin (+0.076) — the dummy collapses when home advantage
+evaporates while the models hold near 46%.
+
+### Future work, deliberately deferred
+
+- **HGB hyperparameter tuning** — see the overfitting gap above. Must be nested inside
+  the training fold.
+- **Draws as a distinct problem** — an ordinal or two-stage "decisive vs draw, then
+  which side" formulation may suit them better than flat 3-class.
+
+Neither was attempted in this pass. Chasing a better number with ad hoc tuning after
+seeing the results is how CV estimates become fiction.
+
+---
+
 ## Setup
 
 ```bash
@@ -230,6 +351,12 @@ on Python 3.12.
     app.py           Streamlit app
     model.joblib     fitted LinearRegression + metadata
     plots/           generated figures
+02-match-predictor/
+    features.py      raw CSVs -> 4,616-match table, leak-free by construction
+    model.py         5 models x 2 chronological CV schemes
+    train_final.py   fits the shipping model, writes model.joblib
+    model.joblib     fitted HistGradientBoosting + metadata
+    plots/           confusion matrices, accuracy by season
 data/
     raw/          Kaggle download (gitignored - see above)
     processed/    both derived tables (committed)
