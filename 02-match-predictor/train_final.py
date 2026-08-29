@@ -49,6 +49,7 @@ DOCUMENTED FUTURE WORK, deliberately not done here
 
 Reads : data/processed/pl_matches_features.csv
 Writes: 02-match-predictor/model.joblib
+        02-match-predictor/oof_predictions.csv  (honest forecasts for the app)
 """
 
 import sys
@@ -57,6 +58,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import pandas as pd
 from sklearn.metrics import accuracy_score
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -64,6 +66,10 @@ from model import (CLASSES, CONTEXT_FEATURES, DIFF_FEATURES,  # noqa: E402
                    VENUE_FEATURES, build_xy, make_models, season_splits)
 
 OUT = Path("02-match-predictor/model.joblib")
+
+# Honest, out-of-sample forecasts for the app to display. See the block that
+# writes this in main() for why the app must not use in-sample predictions.
+OOF_OUT = Path("02-match-predictor/oof_predictions.csv")
 
 SHIP = "HGB-bal"
 
@@ -141,14 +147,45 @@ def main() -> None:
                          "reason it was selected.")
     print("Predicts all three classes ✓")
 
-    # And a genuinely out-of-sample spread, since in-sample can flatter.
-    tr, te, label = list(season_splits(df))[-1]
-    m2 = make_models()[SHIP]
-    m2.fit(x.iloc[tr], y[tr])
-    oos = m2.predict(x.iloc[te])
-    print(f"Held-out season {label}: "
-          f"{ {c: int((oos == c).sum()) for c in CLASSES} } "
-          f"of {len(te)} matches")
+    # --- out-of-fold predictions for the app --------------------------------
+    # The app must not display in-sample predictions. Every match in the table
+    # is in this model's training set, where it scores 0.980 -- an app built on
+    # that would show the top pick as correct 98% of the time for a model whose
+    # real accuracy is 0.470, which is a factor-of-two misrepresentation that no
+    # caption can undo.
+    #
+    # Instead each match is predicted by a model trained only on the seasons
+    # BEFORE it, which is exactly the scheme the reported CV figures come from.
+    # The cost is the first five seasons: they have no prior seasons to train
+    # on and get no row here, so the app covers 2017 onward.
+    print("\nGenerating out-of-fold predictions for the app...")
+    frames = []
+    for tr, te, label in season_splits(df):
+        m2 = make_models()[SHIP]
+        m2.fit(x.iloc[tr], y[tr])
+        proba = m2.predict_proba(x.iloc[te])
+        order = list(m2.classes_)
+        frames.append(pd.DataFrame({
+            "game_id": df.game_id.iloc[te].to_numpy(),
+            "season": df.season.iloc[te].to_numpy(),
+            "p_H": proba[:, order.index("H")],
+            "p_D": proba[:, order.index("D")],
+            "p_A": proba[:, order.index("A")],
+            "trained_on_seasons": f"{df.season.min()}-{int(label) - 1}",
+        }))
+        acc = (m2.predict(x.iloc[te]) == y[te]).mean()
+        print(f"  season {label}: {len(te):>3} matches, accuracy {acc:.3f}")
+
+    oof = pd.concat(frames, ignore_index=True)
+    oof.to_csv(OOF_OUT, index=False, encoding="utf-8")
+
+    merged = oof.merge(df[["game_id", "target"]], on="game_id")
+    top = merged[["p_H", "p_D", "p_A"]].to_numpy().argmax(axis=1)
+    hit = (np.array(["H", "D", "A"])[top] == merged.target.to_numpy()).mean()
+    print(f"\nWrote {OOF_OUT} ({len(oof):,} matches, "
+          f"seasons {oof.season.min()}-{oof.season.max()})")
+    print(f"  out-of-fold top-pick accuracy: {hit:.3f}  "
+          f"(in-sample was {in_sample:.3f} -- this is the honest one)")
 
 
 if __name__ == "__main__":

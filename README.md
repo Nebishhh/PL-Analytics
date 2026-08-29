@@ -7,7 +7,7 @@ clustering.
 | # | Project | Technique | Status |
 |---|---------|-----------|--------|
 | 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
-| 02 | **match-predictor** | Classification | Complete |
+| 02 | **match-predictor** | Classification | Complete, with a Streamlit app for match forecasts |
 | 03 | **style-finder** | K-Means clustering | Planned |
 
 ---
@@ -218,6 +218,7 @@ only information knowable days before kickoff.
 python 02-match-predictor/features.py      # raw CSVs -> 4,616-match table
 python 02-match-predictor/model.py         # 5 models x 2 CV schemes
 python 02-match-predictor/train_final.py   # fit shipping model -> model.joblib
+streamlit run 02-match-predictor/app.py    # interactive app
 ```
 
 ### Result
@@ -289,6 +290,30 @@ March. Per-game rates drop that to 0.022.
 The first 5 matchdays of each club-season are dropped rather than carrying form across
 the summer, costing 704 of 5,320 matches (13.2%).
 
+### The app
+
+```bash
+streamlit run 02-match-predictor/app.py
+```
+
+Pick a season, optionally a club, then a fixture. Same visual language as
+project 01.
+
+**Every forecast shown is out of sample.** The app reads `oof_predictions.csv`,
+where each match was predicted by a model trained only on the seasons before it
+— not `model.joblib` live. This is not a detail: every match in the feature table
+is in the shipped model's training set, where it scores 0.980, so an app calling
+`predict_proba` directly would show the top pick as correct **98%** of the time
+for a model whose real accuracy is **47%**. No caption undoes a factor-of-two
+misrepresentation. The cost is seasons 2012–2016, which have no prior seasons to
+train on and are therefore not selectable; the app covers 2,967 of the 4,616
+matches.
+
+**All three probabilities are always shown**, as a divided bar, never collapsed
+to a single predicted class. A 41/26/33 split is a coin-flip, not a verdict.
+The fixture dropdown deliberately omits the score, so the model speaks before
+the answer is visible.
+
 ### Known limitations
 
 **The model has learned home advantage and relative form, and has learned nothing
@@ -297,7 +322,9 @@ variants change only how *often* draws are guessed, not how well: LogReg-balance
 draw recall from 0.11 to 0.59 and falls *below* the dummy on accuracy, predicting 1,600
 draws where 697 occurred. Draws have no distinctive feature signature — they happen
 between evenly matched teams, which is a region of feature space rather than a
-direction in it.
+direction in it. Worth noting what it *does* get right: across the 2,967 matches
+in the app it predicts 682 draws against 686 that actually occurred. It has the
+right *number* of draws and the wrong *ones*.
 
 **The ceiling is low and this is near it.** Max eta-squared across every engineered
 feature is 0.132; nothing separates these classes strongly. Match outcomes are
@@ -359,11 +386,13 @@ on Python 3.12.
     model.joblib     fitted LinearRegression + metadata
     plots/           generated figures
 02-match-predictor/
-    features.py      raw CSVs -> 4,616-match table, leak-free by construction
-    model.py         5 models x 2 chronological CV schemes
-    train_final.py   fits the shipping model, writes model.joblib
-    model.joblib     fitted HistGradientBoosting + metadata
-    plots/           confusion matrices, accuracy by season
+    features.py           raw CSVs -> 4,616-match table, leak-free by construction
+    model.py              5 models x 2 chronological CV schemes
+    train_final.py        fits the shipping model, writes model.joblib + OOF
+    app.py                Streamlit app
+    model.joblib          fitted HistGradientBoosting + metadata
+    oof_predictions.csv   out-of-sample forecasts, seasons 2017-2025
+    plots/                confusion matrices, accuracy by season
 data/
     raw/          Kaggle download (gitignored - see above)
     processed/    both derived tables (committed)
