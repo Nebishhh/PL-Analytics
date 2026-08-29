@@ -153,8 +153,13 @@ the target.
 streamlit run 01-value-predictor/app.py
 ```
 
-Pick a player, get an estimate. Three deliberate constraints, each one a
-limitation made visible rather than hidden:
+Pick a player, get an estimate. Optional club and position dropdowns narrow
+the list before the name search — useful at 661 options, where "every
+centre-back at Arsenal" is not a question a plain name box can answer. Both
+default to "All".
+
+Three deliberate constraints, each one a limitation made visible rather than
+hidden:
 
 **The player list is closed.** 661 real players, no free-text stat entry. A form
 accepting "42 goals in 300 minutes" would return a confident number for a

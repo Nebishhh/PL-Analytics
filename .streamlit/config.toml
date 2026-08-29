@@ -1,0 +1,16 @@
+[theme]
+# Premier League brand palette: deep purple ground, neon green accent.
+# Recognisably football rather than default Streamlit blue-on-white, and the
+# green-on-purple contrast ratio is high enough for the small metric labels.
+base = "dark"
+primaryColor = "#00FF87"
+backgroundColor = "#1B0620"
+secondaryBackgroundColor = "#2E0A35"
+textColor = "#F3EAF5"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
