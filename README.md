@@ -6,7 +6,7 @@ clustering.
 
 | # | Project | Technique | Status |
 |---|---------|-----------|--------|
-| 01 | **value-predictor** | Linear regression | Complete — Streamlit app for interactive predictions coming next |
+| 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
 | 02 | **match-predictor** | Classification | Planned |
 | 03 | **style-finder** | K-Means clustering | Planned |
 
@@ -41,8 +41,14 @@ python -m kaggle datasets download -d davidcariboo/player-scores -p data/raw --u
 `python -m kaggle` rather than the bare `kaggle` command, because pip's
 user-level script directory is often not on PATH.
 
-The derived table `data/processed/pl_player_values.csv` **is** committed (92KB),
-so you can run the EDA, the models and the app without downloading anything.
+Two derived tables **are** committed, so you can run the EDA, the models and
+the app without downloading anything:
+
+- `pl_player_values.csv` — 498 rows, the modelling table (≥900 PL minutes)
+- `pl_player_values_prethreshold.csv` — 661 rows, backs the app's player list
+  so that below-threshold players can be shown *why* they get no prediction
+  rather than silently not existing
+
 You only need `data/raw/` if you want to re-run `clean.py` or change a filter.
 
 ---
@@ -56,24 +62,28 @@ career-to-date Premier League appearance record.
 python 01-value-predictor/clean.py   # data/raw -> data/processed (498 rows)
 python 01-value-predictor/eda.py     # diagnostic plots + collinearity report
 python 01-value-predictor/model.py   # 5-fold CV: Linear vs Ridge vs Lasso
+python 01-value-predictor/train_final.py   # fit the shipping model -> model.joblib
+streamlit run 01-value-predictor/app.py    # interactive app
 ```
 
 ### Result
 
-**R² = 0.729 ± 0.045** (5-fold cross-validation, log space)
+**R² = 0.727 ± 0.054** (5-fold cross-validation, log space)
 **Typical error ×1.75** — a €10M player is predicted somewhere between €5.7M
 and €17.5M.
 
 Cross-validation rather than a single holdout: at n=498 one split tells you
-very little. Fold-to-fold R² still ranges 0.664 to 0.781 even after the fixes
+very little. Fold-to-fold R² still ranges 0.646 to 0.811 even after the fixes
 below, and an unlucky split would have made this look far worse or far better
-than it is.
+than it is. Reordering the rows — same data, different fold assignment — moves
+the headline figure by ±0.002, which is a fair measure of how much precision
+to read into it.
 
 | Model | R² (log) | Median abs. error |
 |-------|----------|-------------------|
-| Linear | 0.729 ± 0.045 | €5.85M |
-| Ridge | 0.730 ± 0.043 | €5.94M |
-| Lasso | 0.731 ± 0.040 | €5.82M |
+| Linear | 0.727 ± 0.054 | €6.06M |
+| Ridge | 0.726 ± 0.058 | €6.14M |
+| Lasso | 0.727 ± 0.056 | €6.15M |
 
 The three are indistinguishable — the spread is far inside the fold noise.
 Ridge selects α ≈ 0.17 and Lasso zeroes out no features, meaning both are
@@ -130,12 +140,39 @@ correction.
 **age² feature.** Value follows an inverted U — geometric mean rises from €4.6M
 at 18–20 to €18.3M at 26–28, then falls to €0.35M by 38–40. A single linear age
 term has to draw a straight line through that curve. Adding age² is worth
-**+0.058 R²** (0.671 → 0.729), consistent across all three models.
+**+0.058 R²** (0.671 → 0.729 as first measured), consistent across all three
+models.
 
 **Dropped as leakage:** `highest_market_value_in_eur` is a direct function of
 the target.
 
 **Parked for v1:** `foot`, `height_in_cm`, `contract_expiration_date`.
+
+### The app
+
+```bash
+streamlit run 01-value-predictor/app.py
+```
+
+Pick a player, get an estimate. Three deliberate constraints, each one a
+limitation made visible rather than hidden:
+
+**The player list is closed.** 661 real players, no free-text stat entry. A form
+accepting "42 goals in 300 minutes" would return a confident number for a
+player who cannot exist.
+
+**Below 900 minutes, the app refuses.** 163 of the 661 players get an
+explanation instead of a number. They are in the dropdown *precisely* so the
+refusal is visible — removing them would hide the limitation instead of
+communicating it.
+
+**Estimates are always a range, never a point.** A point estimate of €10M is
+shown as €5.7M–€17.5M. The app also says whether the real value fell inside
+that range, and flags the two known failure modes (ageing veterans, and
+under-predicted defenders and goalkeepers) when they apply.
+
+One caveat on the range itself: ×1.75 is a *typical-error* band, not a
+confidence interval. The actual value falls inside it for 59% of players.
 
 ### Known limitations
 
@@ -170,7 +207,7 @@ themselves influenced by reputation and hype.
 ## Setup
 
 ```bash
-pip install pandas numpy scikit-learn matplotlib
+pip install pandas numpy scikit-learn matplotlib streamlit joblib
 ```
 
 Built against pandas 2.3.3, numpy 2.4.0, scikit-learn 1.9.0, matplotlib 3.11.1
@@ -182,13 +219,16 @@ on Python 3.12.
 
 ```
 01-value-predictor/
-    clean.py      raw CSVs -> modelling table
-    eda.py        distributions, correlations, VIF, age curve
-    model.py      cross-validated model comparison
-    plots/        generated figures
+    clean.py         raw CSVs -> modelling tables
+    eda.py           distributions, correlations, VIF, age curve
+    model.py         cross-validated model comparison
+    train_final.py   fits the shipping model, writes model.joblib
+    app.py           Streamlit app
+    model.joblib     fitted LinearRegression + metadata
+    plots/           generated figures
 data/
     raw/          Kaggle download (gitignored - see above)
-    processed/    pl_player_values.csv (committed)
+    processed/    both derived tables (committed)
 ```
 
 ---

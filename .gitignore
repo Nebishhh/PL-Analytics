@@ -16,6 +16,7 @@ data/raw/
 # negation take effect.
 data/processed/*
 !data/processed/pl_player_values.csv
+!data/processed/pl_player_values_prethreshold.csv
 
 # --- credentials ------------------------------------------------------------
 # The Kaggle API token lives at ~/.kaggle/kaggle.json, which is OUTSIDE this
@@ -46,3 +47,6 @@ ENV/
 .idea/
 .DS_Store
 Thumbs.db
+
+# local tooling config
+.claude/

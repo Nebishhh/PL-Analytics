@@ -81,7 +81,8 @@ Design decisions (agreed in the Step 1 schema review):
            they are scrape artifacts, not recoverable signal.
 
 Reads : data/raw/players.csv, data/raw/appearances.csv
-Writes: data/processed/pl_player_values.csv
+Writes: data/processed/pl_player_values.csv              (498 rows, modelling)
+        data/processed/pl_player_values_prethreshold.csv (661 rows, app list)
 """
 
 from pathlib import Path
@@ -93,6 +94,11 @@ import pandas as pd
 
 RAW = Path("data/raw")
 OUT = Path("data/processed/pl_player_values.csv")
+
+# Same columns, before the minutes threshold. Backs the Streamlit app's
+# player list so that a below-threshold player can be shown the reason he is
+# not predictable, rather than simply being absent from the dropdown.
+OUT_PRETHRESHOLD = Path("data/processed/pl_player_values_prethreshold.csv")
 
 COMPETITION = "GB1"          # Premier League
 ACTIVE_SEASONS = (2024, 2025)
@@ -113,6 +119,30 @@ REQUIRE_PL_APPEARANCE = True
 # R^2 from 0.16 to 0.66 and cuts fold-to-fold variance by a factor of five.
 # Set to 0 to disable and reproduce the original unfiltered table.
 MIN_PL_MINUTES = 900
+
+
+def select_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Final column set, shared by both output tables so they cannot drift.
+
+    highest_market_value_in_eur is intentionally absent (leakage).
+    """
+    return df[[
+        "player_id", "name", "age", "position", "sub_position", "foot",
+        "height_in_cm", "country_of_citizenship", "current_club_id",
+        "current_club_name", "last_season", "contract_expiration_date",
+        "pl_matches", "pl_goals", "pl_assists", "pl_minutes",
+        "pl_yellow_cards", "pl_red_cards", "goals_per90", "assists_per90",
+        "market_value_in_eur",
+    ]].sort_values(
+        # player_id as a tiebreak, with a stable sort: market values are highly
+        # tied (dozens of players at exactly EUR50m), and an unstable sort makes
+        # row order depend on how many rows were passed in. Without this, the
+        # 498-row table reorders itself whenever the 661-row table is written
+        # first, producing a 500-line diff that contains no actual change.
+        ["market_value_in_eur", "player_id"],
+        ascending=[False, True],
+        kind="mergesort",
+    ).reset_index(drop=True)
 
 
 def main() -> None:
@@ -183,35 +213,39 @@ def main() -> None:
                   "pl_minutes", "pl_yellow_cards", "pl_red_cards"]
     df[count_cols] = df[count_cols].fillna(0).astype(int)
 
-    # Applied after the join, since pl_minutes only exists once aggregated.
-    df = df[df["pl_minutes"] >= MIN_PL_MINUTES]
-    steps.append((f"pl_minutes >= {MIN_PL_MINUTES}", len(df)))
-
     # Per-90 rates. Guarded: 3 appearance rows dataset-wide have 0 minutes, so
-    # a player could in principle total 0 and divide by zero.
+    # a player could in principle total 0 and divide by zero. Computed before
+    # the minutes threshold so the pre-threshold table carries them too -- the
+    # app displays them, it just does not feed them to the model.
     minutes = df["pl_minutes"].to_numpy(dtype=float)
     for src, dest in [("pl_goals", "goals_per90"), ("pl_assists", "assists_per90")]:
         df[dest] = np.where(minutes > 0, df[src].to_numpy() * 90.0 / minutes, 0.0)
 
-    # --- select output columns ----------------------------------------------
-    # highest_market_value_in_eur is intentionally absent (leakage).
-    df = df[[
-        "player_id", "name", "age", "position", "sub_position", "foot",
-        "height_in_cm", "country_of_citizenship", "current_club_id",
-        "current_club_name", "last_season", "contract_expiration_date",
-        "pl_matches", "pl_goals", "pl_assists", "pl_minutes",
-        "pl_yellow_cards", "pl_red_cards", "goals_per90", "assists_per90",
-        "market_value_in_eur",
-    ]].sort_values("market_value_in_eur", ascending=False).reset_index(drop=True)
+    df = select_columns(df)
 
+    # --- write the pre-threshold table ---------------------------------------
+    # Every PL player with at least one appearance, including those below the
+    # minutes threshold. The Streamlit app uses this for its player list, so
+    # that a player who does not qualify can be shown an explanation instead
+    # of silently not existing. Nothing is trained on this file.
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(OUT_PRETHRESHOLD, index=False, encoding="utf-8")
+    below = int((df["pl_minutes"] < MIN_PL_MINUTES).sum())
+
+    # --- apply the threshold and write the modelling table -------------------
+    # Applied after the join, since pl_minutes only exists once aggregated.
+    df = df[df["pl_minutes"] >= MIN_PL_MINUTES].reset_index(drop=True)
+    steps.append((f"pl_minutes >= {MIN_PL_MINUTES}", len(df)))
+
     df.to_csv(OUT, index=False, encoding="utf-8")
 
     # --- report --------------------------------------------------------------
     print("Filter funnel")
     for label, n in steps:
         print(f"  {label:<34} {n:>7,}")
-    print(f"\nWrote {OUT}  ({len(df):,} rows x {len(df.columns)} cols)")
+    print(f"\nWrote {OUT_PRETHRESHOLD}  "
+          f"({len(df) + below:,} rows -- app player list, {below} below threshold)")
+    print(f"Wrote {OUT}  ({len(df):,} rows x {len(df.columns)} cols)")
     print(
         f"Target: market_value_in_eur  "
         f"min {df.market_value_in_eur.min():,.0f}  "
