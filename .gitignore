@@ -1,0 +1,38 @@
+# --- data -------------------------------------------------------------------
+# Raw Kaggle download (219MB, and redistributing a scrape is not ours to do).
+# Reproduce with:
+#   kaggle datasets download -d davidcariboo/player-scores -p data/raw --unzip
+data/raw/
+
+# Derived tables -- regenerate with `python 01-value-predictor/clean.py`.
+data/processed/
+
+# --- credentials ------------------------------------------------------------
+# The Kaggle API token lives at ~/.kaggle/kaggle.json, which is OUTSIDE this
+# repo, so git would never see it regardless. These patterns are belt-and-
+# braces in case a token is ever copied into the working tree.
+.kaggle/
+kaggle.json
+*.pem
+*.key
+
+# --- python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.ipynb_checkpoints/
+
+# --- environments -----------------------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+.env
+.env.*
+
+# --- tooling / os -----------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
