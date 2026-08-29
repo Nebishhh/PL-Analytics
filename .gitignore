@@ -5,7 +5,17 @@
 data/raw/
 
 # Derived tables -- regenerate with `python 01-value-predictor/clean.py`.
-data/processed/
+# The 498-row modelling table is committed as an exception so the repo is
+# self-contained: a fresh clone can run eda.py, model.py and the app without
+# first pulling 219MB from Kaggle.
+#
+# Note the trailing /* rather than a plain directory rule. Git cannot
+# re-include a file whose parent directory is excluded, so `data/processed/`
+# followed by a negation would silently keep ignoring the CSV. Excluding the
+# directory *contents* leaves the directory itself readable, which lets the
+# negation take effect.
+data/processed/*
+!data/processed/pl_player_values.csv
 
 # --- credentials ------------------------------------------------------------
 # The Kaggle API token lives at ~/.kaggle/kaggle.json, which is OUTSIDE this
