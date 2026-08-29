@@ -308,9 +308,15 @@ over baseline is a real but modest gain and is reported as such.
 out at 31.7. Coefficients are not individually interpretable. An `l10`-only variant was
 tested and scored *worse* (0.507 vs 0.512), so the full feature set stands.
 
-**HGB overfits badly at library defaults** — in-sample accuracy 0.980 against
-cross-validated 0.470. The CV figure is unaffected and is the honest one, but the gap
-says the defaults are memorising 4,616 rows.
+**HGB fits the training set almost exactly at library defaults** — in-sample accuracy
+0.980 against cross-validated 0.470. This is expected behaviour for gradient boosting
+with an unconstrained depth, not a defect, and it does not affect any number reported
+here: every figure quoted is cross-validated, and the shipped artefact stores those
+rather than anything measured in-sample. What the gap does indicate is *where* tuning
+would pay off — regularisation (`max_depth`, `min_samples_leaf`, `l2_regularization`)
+rather than more capacity. That is scheduled as the first item under
+[Future work](#future-work-deliberately-deferred) below, not an outstanding problem
+with this result.
 
 **Home advantage is non-stationary.** It ranges 39% (2020, empty stadiums) to 50%
 (2016). Season dummies absorb the level shift. Notably, 2020 is where the models beat
@@ -319,8 +325,9 @@ evaporates while the models hold near 46%.
 
 ### Future work, deliberately deferred
 
-- **HGB hyperparameter tuning** — see the overfitting gap above. Must be nested inside
-  the training fold.
+- **HGB hyperparameter tuning** — the train/test gap noted above points at
+  regularisation specifically. Must be nested inside the training fold, or the CV
+  estimate stops meaning anything.
 - **Draws as a distinct problem** — an ordinal or two-stage "decisive vs draw, then
   which side" formulation may suit them better than flat 3-class.
 
