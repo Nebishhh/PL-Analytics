@@ -140,8 +140,7 @@ correction.
 **age² feature.** Value follows an inverted U — geometric mean rises from €4.6M
 at 18–20 to €18.3M at 26–28, then falls to €0.35M by 38–40. A single linear age
 term has to draw a straight line through that curve. Adding age² is worth
-**+0.058 R²** (0.671 → 0.729 as first measured), consistent across all three
-models.
+**+0.076 R²** (0.651 → 0.727), consistent across all three models.
 
 **Dropped as leakage:** `highest_market_value_in_eur` is a direct function of
 the target.

@@ -200,6 +200,15 @@ cols[0].metric(f"Estimated range (×{error_factor})",
                f"{format_eur(low)} – {format_eur(high)}")
 cols[1].metric("Transfermarkt market value", format_eur(actual))
 
+# Stated up front, because a range invites being read as a confidence
+# interval. It is not one -- it is the typical size of a miss, and roughly
+# four players in ten fall outside it.
+st.caption(
+    "This is a typical-error range, not a guaranteed bound — the actual value "
+    "falls inside it for about 6 in 10 players (59% of the 498 the model was "
+    "fitted on)."
+)
+
 within = low <= actual <= high
 st.caption(
     ("✓ The actual value falls inside the model's range."
