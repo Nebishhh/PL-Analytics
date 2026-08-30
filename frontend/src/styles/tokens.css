@@ -1,0 +1,90 @@
+/* DESIGN.md tokens, verbatim. This file is the single source.
+ *
+ * Two rules are enforced structurally here rather than by review:
+ *
+ * 1. Only the SEMANTIC scale is exported to Tailwind via @theme. Tool accents
+ *    stay raw custom properties, so no `bg-tool-01` utility exists and an
+ *    accent cannot land on an SVG by autocomplete (DESIGN.md V1).
+ *
+ * 2. --state-null is grey, never red. Refusal is the instrument working
+ *    correctly, and colouring it as an error teaches the reader that "no
+ *    answer" is a failure (DESIGN.md V2).
+ */
+
+:root {
+  /* --- ground and ink ---------------------------------------------------- */
+  --ink-900: #0a0d13;
+  --ink-850: #0f131b;
+  --ink-800: #151a24;
+  --ink-700: #1e2431;
+  --ink-600: #2a3140;
+  --ink-400: #5b6478;
+  --ink-300: #8892a6;
+  --ink-200: #b8c0d0;
+  --ink-100: #e8ecf4;
+
+  /* --- semantic scale: the ONLY colours permitted on a data mark ---------- */
+  --state-clear: #3ddc97;
+  --state-moderate: #e8b84b;
+  --state-low: #e5484d;
+  --state-null: #5b6478;
+
+  /* --- tool accents: wayfinding only, never a data mark ------------------- */
+  --tool-01: #d9a441;
+  --tool-02: #4cc2e0;
+  --tool-03: #a98bd9;
+
+  /* --- instrument metrics ------------------------------------------------- */
+  /* One rail height everywhere. A band, a distribution and a separation axis
+   * are different statistics, but rendering them at different heights makes a
+   * reader parse them as different kinds of object. */
+  --rail-h: 44px;
+  --rail-radius: 6px;
+  --rail-inset: 12px;
+  --tick-w: 2px;
+  --tick-over: 8px;
+  --zone-label-h: 18px;
+  --mark-dot: 10px;
+
+  /* --- type scale --------------------------------------------------------- */
+  --t-micro: 11px;
+  --t-label: 12px;
+  --t-body: 14px;
+  --t-prose: 16px;
+  --t-figure: 20px;
+  --t-value: 30px;
+  --t-display: 38px;
+
+  /* --- spacing, 4px grid -------------------------------------------------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+}
+
+@theme {
+  --color-ink-900: var(--ink-900);
+  --color-ink-850: var(--ink-850);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-ink-600: var(--ink-600);
+  --color-ink-400: var(--ink-400);
+  --color-ink-300: var(--ink-300);
+  --color-ink-200: var(--ink-200);
+  --color-ink-100: var(--ink-100);
+
+  --color-state-clear: var(--state-clear);
+  --color-state-moderate: var(--state-moderate);
+  --color-state-low: var(--state-low);
+  --color-state-null: var(--state-null);
+
+  /* Tool accents are DELIBERATELY not exported. See rule 1 above. */
+
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-prose: "IBM Plex Serif", Georgia, serif;
+}

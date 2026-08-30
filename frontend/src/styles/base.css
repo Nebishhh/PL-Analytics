@@ -1,0 +1,76 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Self-hosted; no Google Fonts request, no layout shift. */
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/ibm-plex-serif/400.css";
+
+/* Only two weights exist in this system, 400 and 600. An instrument panel
+ * needs contrast between label and value, which the type scale already
+ * provides; a weight ramp adds noise without adding information. */
+
+/* min-height, not height. With `height: 100%` the #root box stops at the
+ * viewport while its content overflows, so the sticky top bar sticks to the
+ * bottom of that 576px box and strands itself mid-page. min-height lets #root
+ * grow with the content, which puts sticky back on the document scroll. */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-900);
+  color: var(--ink-200);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* DESIGN.md V7. Every figure in this app aligns down a column, which is the
+ * difference between a comparison you can scan and one you have to read
+ * twice. Applied to the mono face globally rather than per component so it
+ * cannot be forgotten. */
+.font-mono,
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.font-prose {
+  font-family: var(--font-prose);
+  font-size: var(--t-prose);
+  line-height: 1.6;
+}
+
+/* Labels read as labels, not body text. */
+.label {
+  font-size: var(--t-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-300);
+}
+
+/* Nothing in this system animates to convey meaning, so removing motion
+ * removes nothing (DESIGN.md §10). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--state-clear);
+  outline-offset: 2px;
+}

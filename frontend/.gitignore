@@ -1,0 +1,7 @@
+# Dependencies and build output. api-types.d.ts is deliberately NOT ignored:
+# it is generated from the backend's /openapi.json but committed, so a drift
+# between the two shows up as a dirty diff after `npm run gen:types`.
+node_modules/
+dist/
+.vite/
+*.local
