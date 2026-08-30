@@ -331,6 +331,44 @@ way to make it pass is to delete the explanation. `backend/tests/`
 comments with `ast` before searching, and should be preferred over the grep
 where it can be run.
 
+### 7.1 Every grep-based check must strip prose before matching
+
+**A check that searches source for a forbidden token will otherwise fire on the
+comment explaining the prohibition.** Strip comments and docstrings first — with
+`ast` for Python, a comment-stripping pass for TS/JS — or scope the pattern
+tightly enough that prose cannot match it.
+
+This has now happened three separate times in this repository:
+
+| Check | Fired on |
+|---|---|
+| §7's own `predict_proba` grep | `match.py`'s docstring stating it must never call `predict_proba` |
+| `backend/tests/test_constraints.py` | Comments in `match.py`, `artefacts.py`, `value.py` — every hit prose |
+| Frontend figure-drift grep (`0\.10\|0\.50\|900\|1\.75`) | `ZonedAxis.tsx`'s docstring stating the component must not contain those literals |
+
+Each reported a violation against compliant code. The failure mode is worse than
+a false positive, because the quickest way to make the check pass is to delete
+the sentence that says why the rule exists — from the file a developer reads
+before touching that code. A rule enforced by a check that punishes its own
+documentation will end up undocumented.
+
+### 7.2 Windows: two traps that cost real time
+
+- **`pkill` silently does nothing.** Killing the backend to reload a changed
+  schema appeared to succeed while the stale process kept serving the old
+  `/openapi.json`. Use `netstat -ano | grep ':8000\s'` to find the PID, then
+  `taskkill //PID <pid> //F` (double slashes under Git Bash).
+- **A schema change needs a genuine restart.** FastAPI builds `/openapi.json`
+  once at startup, so an edit to `schemas.py` stays invisible until the process
+  actually dies. Confirm the reload landed —
+  `curl -s localhost:8000/openapi.json | grep <NewModel>` — rather than assuming
+  it did.
+
+Related, in `frontend/vite.config.ts`: Vite binds `localhost`, which Node 17+
+resolves to `::1`, so the dev server listens on IPv6 only. Browsers are
+unaffected; `curl http://127.0.0.1:5173` fails while `curl http://localhost:5173`
+succeeds.
+
 Manual checks that no grep will catch:
 
 - The three Streamlit apps still run on 8501/8502/8503 and produce identical output
