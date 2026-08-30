@@ -167,6 +167,88 @@ export const STYLE = {
     `Overall silhouette is ${silhouette}, and no k from 2 to 10 reaches 0.25 — the conventional threshold for meaningful structure. These are regions of a continuous distribution, not natural kinds.`,
 };
 
+/* -- /about ---------------------------------------------------------------- */
+
+/**
+ * The methodology page's prose.
+ *
+ * The headline sentences deliberately reuse the README's wording. The README
+ * is where these claims were first made and argued; restating them differently
+ * in the app would create two versions of the same finding, and the weaker one
+ * would be whichever a reader saw second. Figures are still passed in from the
+ * artefacts -- the sentences are shared, the numbers are not duplicated.
+ *
+ * Plot captions say what each image is EVIDENCE FOR, not what it depicts. A
+ * caption reading "residuals by predicted value" tells a reader nothing they
+ * could not see; the point of showing the committed PNGs at all is that they
+ * are what the claims rest on (AGENTS.md §1.3).
+ */
+export const ABOUT = {
+  intro:
+    "Three models on Premier League data, each built to a different technique, and each shown here with what it cannot do alongside what it can. The figures below are read from the trained artefacts rather than written into this page, so they cannot drift from the models that produced them.",
+
+  value: {
+    headline: (r2: string, sd: string, scheme: string) =>
+      `R² = ${r2} ± ${sd} (${scheme} cross-validation, log space).`,
+    band: (factor: string, low: string, high: string) =>
+      `Typical error ×${factor} — a €10M player is predicted somewhere between ${low} and ${high}.`,
+    coverage: (pct: string) =>
+      `The band holds the actual value for ${pct} of players, measured out of fold. Roughly two in five fall outside it.`,
+  },
+
+  match: {
+    headline: (acc: string, sd: string, base: string, delta: string) =>
+      `Accuracy ${acc} ± ${sd} against a ${base} always-predict-home-win baseline (+${delta}).`,
+    f1: (f1: string, scheme: string) =>
+      `Macro F1 ${f1}. ${scheme[0]?.toUpperCase()}${scheme.slice(1)}.`,
+    theTrade:
+      "Logistic regression is more accurate and is not what ships. It earns its higher accuracy substantially by declining to predict draws, and a model that has quietly reduced a three-outcome forecast to two is a worse product than a slightly less accurate one that attempts all three.",
+  },
+
+  style: {
+    headline: (k: number, n: number, features: number) =>
+      `k = ${k}, StandardScaler, ${n} players, ${features} per-90 features.`,
+    silhouette: (s: string) =>
+      `Overall silhouette ${s} — below 0.25, the conventional threshold for meaningful structure.`,
+  },
+
+  /** Keyed by the PNG filename the API serves, so a renamed plot loses its
+   *  caption loudly rather than silently mislabelling a different image. */
+  plots: {
+    "07_residuals.png":
+      "Where the error band comes from. The spread of residuals is what the band is sized to cover, which is why it is a typical miss rather than a bound.",
+    "04_age_curve.png":
+      "The fitted age² term. It keeps falling at the right-hand end while real market values floor out, which is why the oldest players carry a caveat.",
+    "06_cv_results.png":
+      "Fold-to-fold R². The headline figure is the mean of these, and their spread is how much precision to read into it.",
+    "05_position_boxplot.png":
+      "Value by position. Defenders and goalkeepers sit low and tight, which is the shape the model over-fits to when it has no reputation signal.",
+    "01_target_distribution.png":
+      "Why the target is logged. Raw market value is heavily right-skewed; the log is close to symmetric.",
+    "02_correlation_heatmap.png":
+      "Collinearity among the per-90 rates. This is what ruled out the two diff_gd columns, which were exactly diff_gf minus diff_ga.",
+    "03_feature_scatters.png":
+      "Each feature against the log target, before any fitting.",
+
+    "01_confusion_matrices.png":
+      "Draw-blindness, made visible. The draw row is where every model in this project loses — including the one that ships.",
+    "02_accuracy_by_season.png":
+      "Accuracy per held-out season against the always-home baseline. The gap between the two lines is the entire value the model adds.",
+
+    "01_k_selection.png":
+      "Silhouette against k. No value from 2 to 10 reaches 0.25, which is the finding, not a step on the way to one.",
+    "04_pca_scatter.png":
+      "The clusters in two principal components. They overlap, because they are regions of a continuous distribution rather than natural kinds.",
+    "03_cluster_profiles.png":
+      "The feature means each mechanically generated cluster name is derived from. No name here was written by hand.",
+    "02_group_variance.png":
+      "How much each feature group contributes to the fit. The shares are uneven, and equalising them reassigns a noticeable minority of players — which is what the group-normalised ARI figure above measures.",
+  } as Record<string, string>,
+
+  licenceIntro:
+    "Three different things, under three different terms. The code licence makes no claim over either dataset.",
+};
+
 /* -- shared ---------------------------------------------------------------- */
 
 export const COMMON = {

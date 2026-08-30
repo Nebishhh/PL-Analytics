@@ -264,6 +264,52 @@ class StyleAssignmentResponse(BaseModel):
 
 # --- meta ---------------------------------------------------------------------
 
+class Licensing(BaseModel):
+    """Three different grants over three different things.
+
+    Typed because /about states them as a legal claim about this repository,
+    and a silently renamed field would render an empty licence line rather
+    than failing -- the one failure mode where showing nothing is worse than
+    showing an error.
+    """
+    code: str
+    player_scores_data: str
+    player_stats_data: str
+    note: str
+
+
+class ToolSummary(BaseModel):
+    """One tool's headline material on /about.
+
+    `headline` stays an untyped dict on purpose: the three tools report
+    genuinely different quality shapes (R2 and an error factor; accuracy,
+    macro F1 and per-class recall; silhouette and two ARI figures), and
+    ToolMeta.quality already carries them the same way. Inventing a union
+    here would add a second place for those shapes to drift from the
+    artefacts, which is what AGENTS.md section 2.3 exists to prevent.
+
+    The fields /about renders as prose are typed, because those are the ones
+    a rename would break silently.
+    """
+    id: str
+    name: str
+    technique: str
+    headline: dict
+    limitation: str
+
+
+class AppMeta(BaseModel):
+    """The aggregate /api/meta payload, consumed by /about.
+
+    When MatchListItem was added, /api/meta was left untyped on the grounds
+    that no typed client code consumed it. Building /about is exactly what
+    changed that, so the justification no longer holds and the model is added
+    here rather than left as a known gap.
+    """
+    tools: list[ToolSummary]
+    licensing: Licensing
+
+
 class ToolMeta(BaseModel):
     tool: str
     model: str

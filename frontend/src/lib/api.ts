@@ -69,6 +69,12 @@ export type StyleAssignment = Schemas["StyleAssignmentResponse"];
 export type StylePlayerListItem = Schemas["StylePlayerListItem"];
 export type MatchListItem = Schemas["MatchListItem"];
 
+/* -- /about ---------------------------------------------------------------- */
+
+export type AppMeta = Schemas["AppMeta"];
+export type ToolSummary = Schemas["ToolSummary"];
+export type Licensing = Schemas["Licensing"];
+
 /* -- transport ------------------------------------------------------------ */
 
 export class ApiError extends Error {
@@ -91,6 +97,9 @@ async function get<T>(path: string): Promise<T> {
 
 export const api = {
   health: () => get<{ status: string }>("/health"),
+
+  /** Aggregate headline + limitation + licence material, for /about. */
+  meta: () => get<AppMeta>("/meta"),
 
   value: {
     meta: () => get<ToolMeta>("/value/meta"),

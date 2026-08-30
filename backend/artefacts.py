@@ -178,6 +178,14 @@ def style_quality(a: dict) -> dict:
     """03 already nests under `quality`; passed through unchanged."""
     q = a["quality"]
     return {
+        # k and n_players sit at the artefact's top level rather than under
+        # `quality`, but they are part of the headline any consumer needs to
+        # state the result ("k = 4, 315 players"), so they are lifted in here.
+        # Previously only the style router added n_players, which meant
+        # /api/meta and /api/style/meta disagreed about the shape of the same
+        # block -- exactly the drift §2.3 exists to prevent.
+        "k": int(a["k"]),
+        "n_players": int(a["n_players"]),
         "silhouette": q["silhouette"],
         "silhouette_note": q["silhouette_note"],
         "stability_ari_mean": q["stability_ari_mean"],

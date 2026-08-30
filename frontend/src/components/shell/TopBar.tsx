@@ -51,6 +51,22 @@ export function TopBar() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Right-aligned and unaccented, per DESIGN.md §9's shell sketch: it is
+            not a fourth tool, so it does not take a tool colour. */}
+        <NavLink
+          to="/about"
+          className="ml-auto rounded px-3 py-1.5"
+          style={({ isActive }) => ({
+            fontSize: "var(--t-body)",
+            color: isActive ? "var(--ink-100)" : "var(--ink-300)",
+            borderBottom: isActive
+              ? "2px solid var(--ink-400)"
+              : "2px solid transparent",
+          })}
+        >
+          about
+        </NavLink>
       </div>
     </header>
   );

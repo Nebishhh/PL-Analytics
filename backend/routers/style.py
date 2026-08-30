@@ -56,8 +56,7 @@ def meta(request: Request) -> ToolMeta:
     return ToolMeta(
         tool="style",
         model=f"KMeans k={a.style['k']} (StandardScaler)",
-        quality={**art.style_quality(a.style),
-                 "n_players": a.style["n_players"]},
+        quality=art.style_quality(a.style),
         clusters=[
             {"id": int(c), "name": names[c], "size": int(sizes[c]),
              "position_adjacent": bool(adjacent[c])}

@@ -27,6 +27,12 @@
   --state-clear: #3ddc97;
   --state-moderate: #e8b84b;
   --state-low: #e5484d;
+
+  /* The committed plots are matplotlib PNGs on a white ground and are served
+     exactly as committed (AGENTS.md §1.3). They get a white mat rather than
+     being blended into the page, because restyling the evidence to match the
+     palette is how the app's picture and the README's picture drift apart. */
+  --plot-ground: #ffffff;
   --state-null: #5b6478;
 
   /* --- tool accents: wayfinding only, never a data mark ------------------- */
