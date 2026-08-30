@@ -8,7 +8,7 @@ clustering.
 |---|---------|-----------|--------|
 | 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
 | 02 | **match-predictor** | Classification | Complete, with a Streamlit app for match forecasts |
-| 03 | **style-finder** | K-Means clustering | Planned |
+| 03 | **style-finder** | K-Means clustering | Complete |
 
 ---
 
@@ -19,7 +19,17 @@ on Kaggle — a Transfermarkt scrape, CC0-1.0 licensed. 12 CSVs, 219MB
 compressed, covering 50,149 players and 1.89M individual match appearances
 across 31 domestic leagues from 2012 onward.
 
-`data/raw/` is gitignored, so you need to fetch it yourself.
+`03-style-finder` uses a **second dataset**:
+[hubertsidorowicz/football-players-stats-2025-2026](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2025-2026)
+— per-90 and season-total stats for the top five European leagues, 2,839 players,
+**MIT licensed** (not CC0 — see [Licensing](#licensing)). It goes in a subdirectory
+to avoid filename collisions with the player-scores CSVs:
+
+```bash
+python -m kaggle datasets download -d hubertsidorowicz/football-players-stats-2025-2026 -p data/raw/football-players-stats-2025-2026 --unzip
+```
+
+`data/raw/` is gitignored, so you need to fetch both yourself.
 
 ### Reproducing `data/raw/`
 
@@ -49,6 +59,7 @@ without downloading anything:
   so that below-threshold players can be shown *why* they get no prediction
   rather than silently not existing
 - `pl_matches_features.csv` — 4,616 rows, project 02's match table
+- `pl_player_profiles.csv` — 315 rows, project 03's activity-profile table
 
 You only need `data/raw/` if you want to re-run `clean.py` or change a filter.
 
@@ -363,6 +374,197 @@ seeing the results is how CV estimates become fiction.
 
 ---
 
+## 03-style-finder
+
+Groups Premier League outfielders into activity archetypes with K-Means, then
+checks the result against the position label it was never shown.
+
+```bash
+python 03-style-finder/clean.py         # raw CSV -> 315-player table
+python 03-style-finder/cluster.py       # scaling, k selection, stability, naming
+python 03-style-finder/train_final.py   # fit and persist -> model.joblib + assignments
+```
+
+### Result
+
+**k = 4**, StandardScaler, 315 players, 10 per-90 features.
+
+| # | n | Mechanically generated name | Silhouette |
+|---|---|---|---|
+| 0 | 51 (16%) | High goals, shots, shot accuracy; low interceptions, tackles won | **0.250** |
+| 1 | 114 (36%) | Low involvement — below average across all three groups (mean z −0.35), no feature in either quartile | 0.233 |
+| 2 | 86 (27%) | High tackles won, fouls, yellow cards | **0.101** |
+| 3 | 64 (20%) | High assists, crosses, fouls drawn | **0.136** |
+
+Most central player in each: Ollie Watkins, Diogo Dalot, Marc Cucurella,
+Marcus Tavernier.
+
+### The clustering is least trustworthy exactly where it is most interesting
+
+This is the finding, and it comes from cross-referencing the silhouette column
+above against the position validation.
+
+**Cluster 0 largely rediscovers a position.** It holds 27 of the 28 pure forwards
+(96%). Cluster 1 captures 73% of all defenders. Those two are close to the team
+sheet — and they are the two best-separated clusters, at 0.250 and 0.233.
+
+**Clusters 2 and 3 are the ones that add something.** Both are midfield-plurality
+but capture only 38% and 34% of midfielders respectively, and cluster 2 holds 25
+defenders alongside 41 midfielders. They split defenders and midfielders by *what
+they do* — high tackling and fouling versus high crossing and assisting — rather
+than where they line up. That is the only part of this result that goes beyond
+`Pos`.
+
+**And they are the weakest-separated clusters, at 0.101 and 0.136.** Cluster 2
+alone contains 15 of the 19 players whose silhouette is negative.
+
+So the parts of the partition that merely restate the team sheet are solid, and
+the parts that carry genuine information are the shakiest. That is not a bug to
+fix; it is what the data supports, and it is the single most important thing to
+know before using these labels for anything.
+
+### Silhouette never exceeds 0.24 — this project's "nothing beats the dummy"
+
+Project 02 asked whether any model beat a 45.2% always-home-win baseline. The
+answer was yes, modestly. **The equivalent question here gets a much weaker
+answer.**
+
+| k | Inertia drop | Silhouette |
+|---|---|---|
+| 2 | — | **0.237** |
+| 3 | 11.8% | 0.171 |
+| **4** | 11.1% | **0.180** |
+| 5 | 6.3% | 0.164 |
+| 8 | 4.1% | 0.155 |
+
+**No k from 2 to 10 reaches 0.25**, the conventional threshold for meaningful
+structure. K-Means always returns k clusters — that is what the algorithm does, and
+a partition existing is not evidence that natural groups exist. Here it is largely
+**imposing divisions on a continuous cloud**, which the PCA scatter shows directly:
+one blob, not four islands.
+
+The output is still a useful summary of how Premier League minutes get spent. It is
+not a discovery of natural archetypes, and nothing in this repo describes it as one.
+
+### Clustering decisions
+
+**k = 4, chosen against two metrics that disagree.** Elbow points at 4 — inertia
+drops 11.8% and 11.1%, then halves to 6.3%. Silhouette peaks at **k = 2**.
+
+k=2 is **rejected despite scoring best**, because it is near-trivial: it puts 28 of
+28 pure forwards on one side and 96 of 96 pure defenders on the other. It wins by
+rediscovering the team sheet. Choosing it would mean optimising a metric into a
+non-finding.
+
+**Stability breaks the tie.** Mean adjusted Rand index across 8 seeds:
+
+| k | Mean ARI | Min ARI |
+|---|---|---|
+| 4 | **0.966** | 0.925 |
+| 5 | 0.792 | **0.565** |
+
+At k=5 clusters genuinely dissolve and re-form depending on initialisation. k=4 is
+the largest k that holds together.
+
+**StandardScaler over RobustScaler**, for a stronger reason than matching projects
+01 and 02. StandardScaler sets unit variance by construction, so the distance
+metric's weighting *is* the feature count — nothing hidden:
+
+| Scaler | Attacking | Defensive | Discipline | Heaviest feature |
+|---|---|---|---|---|
+| **StandardScaler** | 50.00% | 20.00% | 30.00% | all exactly 10.00% |
+| RobustScaler | 52.74% | 18.38% | 28.88% | `att_gls_p90` 14.74% |
+
+RobustScaler makes the group imbalance *worse* and layers a second, opaque weighting
+on top of it — while barely touching the skew it would be adopted for
+(`att_gls_p90` max |z| 4.63 → 4.56). The skew is moderate (1.60 and 1.78), nothing
+like project 01's z = 17.7 that would justify a robust scaler.
+
+**Group imbalance: reported, not corrected.** `ATTACKING_OUTPUT` holds 5 of the 10
+features and therefore carries **50% of the distance metric**. Two players differing
+sharply in defensive activity are treated as more similar than two differing equally
+in attacking output.
+
+A group-normalised variant (each group divided by √group size, equalising
+contribution at 33/33/33) agrees at **ARI 0.835** — meaning **roughly one player in
+six lands in a different cluster** when the weighting changes. The clusters are
+robust in shape but not in membership. The standard-weighted fit still ships,
+because equalising groups is itself an arbitrary choice rather than a neutral
+correction.
+
+**Per-90 rates only, no raw counts.** Even after the 900-minute floor, minutes span
+901 to 3,420, and raw counts inherit it — `Int` correlates 0.636 with minutes,
+`TklW` 0.582. Per-90 removes nearly all of it (`Int` → 0.152, `TklW` → −0.010).
+Including both forms would repeat project 01's `pl_matches`/`pl_minutes` problem,
+except that in K-Means the consequence is a silently doubled weight rather than an
+unstable coefficient.
+
+Filter chain: 2,839 → **551** (Premier League) → **511** (goalkeepers excluded, their
+stat profile is disjoint) → **315** (≥900 minutes, same threshold and same reason as
+project 01).
+
+### Activity profiles, not playing styles
+
+The goal was corrected, and the correction is carried in the naming rather than a
+footnote. **This dataset cannot measure playing style.** Searching every standard
+FBref family against its 102 columns:
+
+| Expected | Present |
+|---|---|
+| Passing (`Cmp`, `PrgP`, `KP`) | **none** |
+| Dribbles / take-ons | **none** |
+| Expected goals (`xG`, `xA`) | **none** |
+| Touches / carries | **none** |
+| Full defence (`Tkl`, `Blocks`, `Press`) | only `TklW`, `Int` |
+| Shooting | complete |
+
+What separates a deep-lying playmaker from a ball-winner is mostly distribution and
+progression — none of which is here. What *can* be measured is attacking output,
+defensive activity and discipline.
+
+So the output file is `pl_player_profiles.csv`, the feature groups are
+`ATTACKING_OUTPUT` / `DEFENSIVE_ACTIVITY` / `DISCIPLINE`, columns carry `att_` /
+`def_` / `disc_` prefixes, and there is no `STYLE_FEATURES` constant anywhere. A
+later script cannot call these "styles" without renaming things first.
+
+**Cluster names are generated mechanically** from feature means against the
+quartiles of all 315 players — never hand-written. "Inverted winger", "deep-lying
+playmaker" and "ball-playing centre-back" are all claims about passing, carrying or
+positioning, and none can be justified from these ten columns. `Pos` exists but is
+held out for validation and never enters a name.
+
+The largest cluster has no feature in either quartile, so a magnitude fallback names
+it for what it is. That a third of regular Premier League starters are statistically
+unremarkable on these axes is a real finding about a continuous distribution, not a
+naming failure.
+
+### Known limitations
+
+**Individual assignments are often marginal.** Stored per player in
+`cluster_assignments.csv`:
+
+- **19 of 315 (6%)** have a *negative* silhouette — they sit closer to another
+  cluster's members than to their own
+- **76 (24%)** are within 0.5 of a rival centroid
+- Lewis Hall's margin is **0.04**, which makes his label essentially a coin flip
+
+`distance_to_centroid`, `margin_to_next` and per-player `silhouette` are all in the
+output precisely so a consumer can surface that uncertainty rather than presenting
+every label as equally solid.
+
+**Cluster numbering is arbitrary.** K-Means integer labels can permute across refits
+even for an identical partition, so the generated *names* are the durable
+identifier, not the numbers.
+
+**One season, one league.** 315 players from 2025–26 Premier League only. No
+cross-season stability check is possible from this dataset, so whether these
+groupings persist year to year is unknown.
+
+**The feature groups are unbalanced 5 / 2 / 3**, which is upstream of every result
+above — see the group-imbalance note.
+
+---
+
 ## Ideas parked for later
 
 Nothing in this section is started. Each item is recorded because it was
@@ -412,9 +614,14 @@ show in the gap between forecast and result.
   [02's future work](#future-work-deliberately-deferred). The train/test gap
   points at regularisation specifically.
 - **Draw-specific modelling** — an ordinal or two-stage formulation, same section.
-- **03-style-finder** — the third project, not started. K-Means clustering, where
-  the leakage question that dominated projects 01 and 02 does not arise at all;
-  the failure modes move to feature scaling and to choosing *k*.
+- **A Streamlit app for 03-style-finder** — the only one of the three without one.
+  It would have to surface `margin_to_next` and per-player silhouette rather than
+  presenting a confident archetype label, since 24% of players sit within 0.5 of a
+  rival centroid. Those columns exist in `cluster_assignments.csv` precisely so that
+  is possible.
+- **Cross-season cluster stability for 03** — whether these groupings persist year
+  to year is untestable from a single-season dataset. Would need a second season of
+  the same stats.
 
 ---
 
@@ -448,6 +655,13 @@ on Python 3.12.
     model.joblib          fitted HistGradientBoosting + metadata
     oof_predictions.csv   out-of-sample forecasts, seasons 2017-2025
     plots/                confusion matrices, accuracy by season
+03-style-finder/
+    clean.py                  raw CSV -> 315-player activity-profile table
+    cluster.py                scaling, k selection, stability, naming, validation
+    train_final.py            fits and persists the clustering
+    model.joblib              fitted Pipeline + quality metadata
+    cluster_assignments.csv   per-player cluster, name and uncertainty
+    plots/                    k selection, group variance, profiles, PCA
 data/
     raw/          Kaggle download (gitignored - see above)
     processed/    both derived tables (committed)
@@ -457,14 +671,23 @@ data/
 
 ## Licensing
 
-Two different things, under two different terms:
+Three different things, under three different terms.
 
 - **Code** in this repository is MIT licensed — see [LICENSE](LICENSE).
-- **Data** comes from the Kaggle
+- **Player-scores data** (projects 01 and 02) comes from the Kaggle
   [player-scores](https://www.kaggle.com/datasets/davidcariboo/player-scores)
-  dataset, released under CC0-1.0 (public domain dedication). That covers the
-  committed `data/processed/pl_player_values.csv`, which is derived from it.
+  dataset under **CC0-1.0**, a public domain dedication. That covers the committed
+  `pl_player_values.csv`, `pl_player_values_prethreshold.csv` and
+  `pl_matches_features.csv`.
+- **Player-stats data** (project 03) comes from the Kaggle
+  [football-players-stats-2025-2026](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2025-2026)
+  dataset under the **MIT licence**, which is a different grant from CC0 and carries
+  its own attribution condition. That covers `pl_player_profiles.csv` and
+  `cluster_assignments.csv`.
 
-The MIT license applies to the analysis code only and makes no claim over the
-underlying data, which remains subject to its own terms and to Transfermarkt's
-as the original source.
+The code licence being MIT and the project-03 data licence being MIT is a
+coincidence, not a shared grant — they are separate and cover different things.
+
+The code licence makes no claim over either dataset. Both remain subject to their
+own terms and to the original sources' — Transfermarkt for player-scores, FBref for
+the stats dataset.
