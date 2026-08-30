@@ -113,13 +113,20 @@ def main() -> None:
     # is close to arbitrary, which at silhouette 0.180 is common.
     centroids = model.named_steps["kmeans"].cluster_centers_
     d = np.linalg.norm(z[:, None, :] - centroids[None, :, :], axis=2)
-    nearest = np.sort(d, axis=1)
+    order = np.argsort(d, axis=1)
+    nearest = np.take_along_axis(d, order, axis=1)
 
     out = df[["player", "squad", "pos", "age", "minutes"]].copy()
     out["cluster"] = labels
     out["cluster_name"] = [names[c] for c in labels]
     out["distance_to_centroid"] = nearest[:, 0].round(4)
     out["margin_to_next"] = (nearest[:, 1] - nearest[:, 0]).round(4)
+    # The second-nearest centroid, named. Without this a consumer can see that
+    # an assignment was close but not what it was close TO, which is the more
+    # useful half of the statement.
+    out["rival_cluster"] = order[:, 1]
+    out["rival_cluster_name"] = [names[c] for c in order[:, 1]]
+    out["distance_to_rival"] = nearest[:, 1].round(4)
     out["silhouette"] = sil_per_player.round(4)
     for f in feats:
         out[f] = df[f]
