@@ -363,6 +363,61 @@ seeing the results is how CV estimates become fiction.
 
 ---
 
+## Ideas parked for later
+
+Nothing in this section is started. Each item is recorded because it was
+considered and deliberately deferred, not because it is in progress.
+
+### Live prediction — not started
+
+Both apps currently predict against the static Kaggle-derived dataset. That is a
+deliberate property rather than a limitation: because every fixture already has
+a known outcome, each prediction can be shown next to what actually happened,
+which is what makes the apps honest about how often the models are wrong.
+
+A live version would instead forecast genuinely upcoming fixtures — matches that
+have not been played. What it would take:
+
+- **A live data source** for recent results and upcoming fixtures.
+  [football-data.org](https://www.football-data.org/) has a usable free tier, as
+  does [API-Football](https://www.api-football.com/) at roughly 100 requests per
+  day. Both are comfortably enough for a weekly refresh ahead of a matchday.
+  Neither supports real-time in-play updates at zero cost, and that is fine —
+  the model's features are all pre-match anyway.
+- **A recurring pipeline rather than a one-time script.** Every feature would
+  need recomputing before each matchday: rolling form over the last 5 and 10,
+  rest days, head-to-head, and the rebuilt league position. This is the same
+  logic as [features.py](02-match-predictor/features.py), run repeatedly against
+  live data instead of once against a static dump.
+- **A club-identity mapping layer.** The live source's team names and IDs will
+  not match Transfermarkt's, so a crosswalk is needed. Expect this to be the
+  fiddliest part — promoted clubs, renames, and inconsistent suffixes
+  ("Wolverhampton Wanderers" vs "Wolves") are where it breaks.
+- **Scheduling**, if it should run without being triggered by hand. GitHub
+  Actions' free tier is sufficient for a weekly cron.
+
+**The model itself needs no changes.** `model.joblib` and the feature definitions
+stay exactly as they are — this is a data-engineering addition, not a modelling
+one. Only the input pipeline changes: same 32 features, same trained model,
+different source of rows.
+
+One consequence worth stating up front: a live version loses the
+prediction-versus-reality comparison that both apps are currently built around,
+at least until each fixture is played. Any live UI would need to decide what to
+show in the gap between forecast and result.
+
+### Already recorded per project
+
+- **HGB hyperparameter tuning** — see
+  [02's future work](#future-work-deliberately-deferred). The train/test gap
+  points at regularisation specifically.
+- **Draw-specific modelling** — an ordinal or two-stage formulation, same section.
+- **03-style-finder** — the third project, not started. K-Means clustering, where
+  the leakage question that dominated projects 01 and 02 does not arise at all;
+  the failure modes move to feature scaling and to choosing *k*.
+
+---
+
 ## Setup
 
 ```bash
