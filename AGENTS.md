@@ -40,6 +40,55 @@ If the port reveals a genuine bug in existing project code, **stop and report it
 Do not fix it as part of frontend work — that couples two changes that need
 separate review.
 
+### 0.1 Permitted exception: extending an artefact's metadata
+
+There is one category of change to protected project code that is allowed.
+
+**When a figure the application genuinely needs is missing from an artefact, the
+artefact gets extended — the gap is not worked around in application code.**
+
+A backend constant, a frontend literal, or a value recomputed at request time is a
+second source of truth, and it will drift. §2.3 exists because that has already
+happened once in this repository.
+
+#### Conditions — all four must hold
+
+1. **A new key is added.** No existing key is modified or removed.
+2. **No retraining.** No coefficient, intercept, scaler statistic, cluster centroid
+   or prediction changes.
+3. **Proof is shown in the commit message.** Capture the artefact's state before
+   the edit, compare after, and state the result explicitly — coefficients,
+   intercept, scaler, keys added / changed / removed, and at least one prediction
+   verified unchanged.
+4. **Explicit confirmation before the file is opened.** Flag it as an exception,
+   say what will be added and why application code cannot carry it, and wait. The
+   `band_coverage` change followed exactly this sequence: the figure was computed
+   read-only first, so the decision to proceed was made with the number already in
+   hand.
+
+#### What this is not
+
+This does **not** license re-running `train_final.py` or `cluster.py` to "refresh"
+an artefact, re-tune a hyperparameter, or improve a score. Those remain forbidden
+by §0 without exception. The distinction is that an extension **adds a fact that
+was already true but unrecorded**; a refresh **changes what the artefact asserts**.
+
+If a proposed change would move any number that is already stored, it is not an
+extension.
+
+#### Precedents
+
+Three, all following this pattern:
+
+| Change | Missing figure | Why application code could not carry it |
+|---|---|---|
+| **02** `oof_predictions.csv` | Held-out forecasts | Computing them per request is forbidden outright (§2.1) |
+| **03** `rival_cluster`, `rival_cluster_name`, `distance_to_rival` | Which cluster an assignment was close *to* | A consumer could see an assignment was close but not to what — the more useful half |
+| **01** `band_coverage` | How often the ×1.75 band actually contains the value | Recomputing invites approximation; the in-sample/out-of-fold choice must travel with the data, not be made by whoever renders it |
+
+Each was requested, confirmed, and verified before the file was touched. Follow the
+same sequence.
+
 ---
 
 ## 1. Binding technical decisions
