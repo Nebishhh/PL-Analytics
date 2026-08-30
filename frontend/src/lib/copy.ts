@@ -22,7 +22,28 @@
 
 /* -- 01 value -------------------------------------------------------------- */
 
-/** Keyed by `caveats[].key` from the API. */
+/**
+ * Keyed by `caveats[].key` from the API.
+ *
+ * TODO -- the `veteran` sentence names ages the artefact does not back.
+ *   It reads "past 40", but the caveat actually fires at
+ *   `caveat_thresholds.veteran_age`, which is 38 in
+ *   01-value-predictor/model.joblib. "€300–500K" is likewise a bare figure
+ *   with no source behind it. So a reader is told the model struggles past
+ *   40 while the model has in fact flagged this player since 38.
+ *
+ *   The two statements are not contradictory -- the caveat triggers at 38
+ *   and the curve does keep falling past 40 -- and neither number is a model
+ *   quality figure, so this is not an AGENTS.md §2.3 violation and was left
+ *   alone rather than widened into the Step 6 commit. It is still the one
+ *   place in this module where a figure is written rather than passed in.
+ *
+ *   The fix is to make `veteran` a function of the trigger age, taking it
+ *   from `caveat_thresholds.veteran_age` the way every other figure here is
+ *   taken as an argument, and to drop or source the €300–500K floor. That
+ *   needs the threshold surfaced on the estimate response, which it is not
+ *   today. Deliberately deferred as its own change, not forgotten.
+ */
 export const VALUE_CAVEATS: Record<string, string> = {
   blind_spot:
     "The model has no club-quality or reputation signal, so it prices defenders and goalkeepers almost entirely on goals and assists, and under-values them as a result.",
