@@ -1,0 +1,8 @@
+# Backend only. The modelling stack (scikit-learn, pandas, numpy) is already
+# required by the three projects and is not re-pinned here; joblib artefacts
+# must be loaded with the same scikit-learn major version that wrote them.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pandas>=2.0
+joblib>=1.3
+scikit-learn>=1.5
