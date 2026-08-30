@@ -122,6 +122,28 @@ class MatchSummary(BaseModel):
     away_club: str
 
 
+class MatchListItem(BaseModel):
+    """The fixture list that drives the picker.
+
+    Typed rather than returned as a bare dict: this endpoint carries the
+    game_id every forecast request is keyed on, and an untyped response means
+    the generated client gets `additionalProperties: true` and no compile-time
+    check on any field name. API.md §0's guarantee -- that the implementation
+    and the contract cannot silently disagree -- only holds where a response
+    model exists.
+    """
+    game_id: int
+    date: str
+    season: int
+    home_club: str
+    away_club: str
+    venue: Literal["H", "A"] | None = Field(
+        default=None,
+        description="Set only when a club filter is applied; marks whether "
+                    "that club was home or away.",
+    )
+
+
 class Forecast(BaseModel):
     probabilities: dict[str, float]
     order: list[str] = Field(

@@ -22,6 +22,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from .. import artefacts as art
 from ..config import PLOT_DIRS
 from ..schemas import (Baseline, Coverage, Forecast, HeldOutForecastResponse,
+                       MatchListItem,
                        MatchActual, MatchSummary, SideForm, ToolMeta)
 
 router = APIRouter(prefix="/match", tags=["match"])
@@ -68,10 +69,10 @@ def seasons(request: Request) -> list[int]:
     return sorted(int(s) for s in a.match_oof.season.unique())
 
 
-@router.get("/matches")
+@router.get("/matches", response_model=list[MatchListItem])
 def matches(request: Request,
             season: int | None = Query(None),
-            club: str | None = Query(None)) -> list[dict]:
+            club: str | None = Query(None)) -> list[MatchListItem]:
     """Fixture list for the Season -> Club -> Match chain.
 
     Restricted to matches that have a forecast. A bookmarked game_id outside
@@ -85,13 +86,14 @@ def matches(request: Request,
         df = df[(df.home_club_name == club) | (df.away_club_name == club)]
     df = df.sort_values("date")
     return [
-        {"game_id": int(r.game_id), "date": str(r.date)[:10],
-         "season": int(r.season),
-         "home_club": r.home_club_name, "away_club": r.away_club_name,
-         # Deliberately no score. Putting the result in the selector would
-         # answer the question before the model has spoken.
-         "venue": ("H" if club and r.home_club_name == club
-                   else "A" if club else None)}
+        MatchListItem(
+            game_id=int(r.game_id), date=str(r.date)[:10],
+            season=int(r.season),
+            home_club=r.home_club_name, away_club=r.away_club_name,
+            # Deliberately no score. Putting the result in the selector would
+            # answer the question before the model has spoken.
+            venue=("H" if club and r.home_club_name == club
+                   else "A" if club else None))
         for _, r in df.iterrows()
     ]
 
