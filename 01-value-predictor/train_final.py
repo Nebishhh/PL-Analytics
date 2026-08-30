@@ -58,6 +58,21 @@ ERROR_FACTOR = 1.75
 # enforce the same rule without hardcoding it in a third place.
 MIN_PL_MINUTES = 900
 
+# Thresholds that decide which caveats a player triggers. These previously
+# existed only inside app.py, which imports Streamlit and therefore cannot be
+# read by anything else -- so a second consumer had no honest source for them
+# and would have had to re-declare them. Stored here for the same reason
+# min_pl_minutes is: a rule enforced in two places will eventually be enforced
+# differently in each.
+#
+# VETERAN_AGE      the fitted age^2 curve keeps falling past 40 while real
+#                  values floor around EUR300-500k, so predictions for the
+#                  oldest players are systematically low.
+# BLIND_SPOT_POS   positions the model prices almost entirely on goals and
+#                  assists, and therefore under-values.
+VETERAN_AGE = 38
+BLIND_SPOT_POSITIONS = ("Goalkeeper", "Defender")
+
 
 def band_coverage(x, y, model) -> dict:
     """How often the actual value actually lands inside the +/-1.75x band.
@@ -140,6 +155,11 @@ def main() -> None:
         "cv_r2_std": 0.054,
         # How often the band actually contains the value. See band_coverage().
         "band_coverage": coverage,
+        # Caveat thresholds, so a consumer never re-declares them.
+        "caveat_thresholds": {
+            "veteran_age": VETERAN_AGE,
+            "blind_spot_positions": list(BLIND_SPOT_POSITIONS),
+        },
         "trained_on": DATA.name,
         "trained_date": date.today().isoformat(),
         "sklearn_version": __import__("sklearn").__version__,

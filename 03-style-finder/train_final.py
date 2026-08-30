@@ -65,6 +65,21 @@ from cluster import (K_CHOSEN, LABELS, SEED, SEEDS,  # noqa: E402
 MODEL_OUT = Path("03-style-finder/model.joblib")
 LABELS_OUT = Path("03-style-finder/cluster_assignments.csv")
 
+# Confidence-tier thresholds. These previously existed only inside app.py,
+# which imports Streamlit and therefore cannot be read by anything else, so a
+# second consumer had no honest source for them.
+#
+# The pairing is deliberate and is the reason both are stored rather than just
+# the margin. margin_to_next asks whether another centroid is nearly as close
+# -- geometry. Per-player silhouette asks whether the player sits closer to
+# another cluster's members than to his own -- density. They are near
+# independent: only 4 of the 19 negative-silhouette players also have a margin
+# under 0.10, so a margin-only rule would present the other 15 as confidently
+# assigned.
+CONTESTED_MARGIN = 0.10
+BORDERLINE_MARGIN = 0.50
+BORDERLINE_SILHOUETTE = 0.05
+
 
 def main() -> None:
     df, feats, groups = load()
@@ -80,6 +95,31 @@ def main() -> None:
     z = model.named_steps["scale"].transform(df[feats])
 
     names = name_clusters(df, feats, labels)
+
+    # Which clusters mostly restate position, computed rather than hardcoded so
+    # it stays true if the fit ever changes.
+    #
+    # The metric is CAPTURE, not purity, and the difference is not cosmetic.
+    # Purity asks "what share of this cluster is position X"; capture asks
+    # "what share of all position-X players landed in this cluster". The claim
+    # being made is that knowing a player's position largely tells you his
+    # cluster, which is capture.
+    #
+    # They disagree here. Cluster 3 is 82.8% midfielders by purity but holds
+    # only 34% of the league's midfielders, so knowing someone is a midfielder
+    # says little about whether he is in it. A purity rule would wrongly flag
+    # it as position-adjacent. Capture at 0.60 reproduces {0, 1} -- cluster 0
+    # holds 96.4% of pure forwards, cluster 1 holds 72.9% of pure defenders --
+    # which is what the analysis actually found.
+    POSITION_CAPTURE = 0.60
+    _tmp = df.assign(_c=labels)
+    position_adjacent = {
+        int(c): bool(max(
+            ((_tmp._c == c) & (_tmp.pos == p)).sum() / (_tmp.pos == p).sum()
+            for p in _tmp.pos.unique() if (_tmp.pos == p).sum() > 0
+        ) >= POSITION_CAPTURE)
+        for c in sorted(set(labels))
+    }
     assert all(names.values()), "a cluster received an empty name"
     assert len(set(names.values())) == K_CHOSEN, "duplicate cluster names"
 
@@ -167,6 +207,15 @@ def main() -> None:
                 for g, s in group_variance_shares(z, feats, groups).items()
             },
         },
+        "thresholds": {
+            "contested_margin": CONTESTED_MARGIN,
+            "borderline_margin": BORDERLINE_MARGIN,
+            "borderline_silhouette": BORDERLINE_SILHOUETTE,
+        },
+        # Clusters that largely restate a position rather than revealing
+        # something new. Derived, not asserted: a cluster qualifies when one
+        # position group supplies at least 60% of its members.
+        "position_adjacent": position_adjacent,
         "n_players": len(df),
         "trained_on": "pl_player_profiles.csv",
         "trained_date": date.today().isoformat(),
