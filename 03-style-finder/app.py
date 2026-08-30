@@ -60,6 +60,9 @@ BORDERLINE_SIL = 0.05
 # 0 holds 27 of the 28 pure forwards, 1 holds 73% of all defenders.
 POSITION_ADJACENT = {0, 1}
 
+ALL_POSITIONS = "All positions"
+POSITION_GROUPS = ["DF", "MF", "FW"]
+
 FEATURE_LABELS = {
     "att_gls_p90": "Goals", "att_ast_p90": "Assists", "att_sh_p90": "Shots",
     "att_crs_p90": "Crosses", "att_sot_pct": "Shot accuracy %",
@@ -168,20 +171,37 @@ st.warning(
 
 # --- 1. player selection -----------------------------------------------------
 
-choice = st.selectbox(
+filter_cols = st.columns([1, 3])
+
+# Matches ANY listed position, not just the first. 84 of the 315 players carry
+# two (MF,FW and the like), so first-token matching would hide 30 forwards from
+# anyone filtering on FW.
+position = filter_cols[0].selectbox(
+    "Position", options=[ALL_POSITIONS] + POSITION_GROUPS
+)
+
+shortlist = df
+if position != ALL_POSITIONS:
+    shortlist = shortlist[shortlist.pos.str.contains(position)]
+
+choice = filter_cols[1].selectbox(
     "Player",
-    options=sorted(df.player.tolist()),
+    options=sorted(shortlist.player.tolist()),
     index=None,
-    placeholder=f"Search {len(df)} players by name…",
+    placeholder=f"Search {len(shortlist)} player"
+                f"{'s' if len(shortlist) != 1 else ''} by name…",
 )
 
 if choice is None:
+    scope = (f"All {len(df)} Premier League outfielders with at least 900 "
+             f"minutes in 2025–26 are here"
+             if position == ALL_POSITIONS else
+             f"**{len(shortlist)}** of {len(df)} players list {position}")
     st.info(
         f"Pick a player to see which activity cluster they were assigned to, "
-        f"and how solid that assignment is. All {len(df)} Premier League "
-        f"outfielders with at least 900 minutes in 2025–26 are here — "
-        f"goalkeepers are excluded, since their statistical profile shares "
-        f"almost nothing with outfield players."
+        f"and how solid that assignment is. {scope} — goalkeepers are "
+        f"excluded, since their statistical profile shares almost nothing "
+        f"with outfield players."
     )
     st.stop()
 
