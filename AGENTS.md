@@ -312,8 +312,24 @@ git status --porcelain | grep -vE '^\?\? (backend|frontend)/|^ M (backend|fronte
 ```
 
 ```bash
-grep -rn "predict_proba" backend/ | grep -i match && echo "VIOLATION of 2.1" || echo "OOF constraint intact"
+grep -rn --include="*.py" -E "\.predict_proba\s*\(" backend/ | grep -v "/tests/" && echo "VIOLATION of 2.1" || echo "OOF constraint intact"
 ```
+
+Three details in that command are load-bearing, and the first version of it
+had none of them — it reported a violation against a compliant backend.
+
+- **`\.predict_proba\s*\(` rather than the bare word.** The bare word matches
+  §2.1's own prohibition text. `match.py` opens with a docstring saying it must
+  never call `predict_proba`, and that sentence tripped the check.
+- **`--include="*.py"`.** Otherwise `__pycache__/*.pyc` matches, because
+  compiled bytecode carries the docstring.
+- **`grep -v "/tests/"`.** The constraint test names the thing it forbids.
+
+A check that fires on its own rationale is worse than no check: the cheapest
+way to make it pass is to delete the explanation. `backend/tests/`
+`test_constraints.py` makes the same check properly, stripping docstrings and
+comments with `ast` before searching, and should be preferred over the grep
+where it can be run.
 
 Manual checks that no grep will catch:
 
