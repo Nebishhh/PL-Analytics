@@ -397,6 +397,34 @@ export interface components {
             /** Top Pick Correct */
             top_pick_correct?: boolean | null;
         };
+        /**
+         * MatchListItem
+         * @description The fixture list that drives the picker.
+         *
+         *     Typed rather than returned as a bare dict: this endpoint carries the
+         *     game_id every forecast request is keyed on, and an untyped response means
+         *     the generated client gets `additionalProperties: true` and no compile-time
+         *     check on any field name. API.md §0's guarantee -- that the implementation
+         *     and the contract cannot silently disagree -- only holds where a response
+         *     model exists.
+         */
+        MatchListItem: {
+            /** Game Id */
+            game_id: number;
+            /** Date */
+            date: string;
+            /** Season */
+            season: number;
+            /** Home Club */
+            home_club: string;
+            /** Away Club */
+            away_club: string;
+            /**
+             * Venue
+             * @description Set only when a club filter is applied; marks whether that club was home or away.
+             */
+            venue?: ("H" | "A") | null;
+        };
         /** MatchSummary */
         MatchSummary: {
             /** Game Id */
@@ -845,9 +873,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": components["schemas"]["MatchListItem"][];
                 };
             };
             /** @description Validation Error */

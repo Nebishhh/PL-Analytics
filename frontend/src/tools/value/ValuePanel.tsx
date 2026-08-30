@@ -12,6 +12,7 @@
 
 import type { ValueEstimate } from "../../lib/api";
 import { eur, num, pct } from "../../lib/format";
+import { VALUE, VALUE_CAVEATS } from "../../lib/copy";
 import { BandRail } from "../../components/marks/BandRail";
 import { CalibrationRail } from "../../components/marks/CalibrationRail";
 import { Disclosure } from "../../components/ui/Disclosure";
@@ -32,13 +33,6 @@ function inputRate(inputs: Record<string, number>, key: string): string {
   const v = inputs[key];
   return v === undefined ? "—" : num(v);
 }
-
-const CAVEAT_TEXT: Record<string, string> = {
-  blind_spot:
-    "The model has no club-quality or reputation signal, so it prices defenders and goalkeepers almost entirely on goals and assists, and under-values them as a result.",
-  veteran:
-    "The fitted age² curve keeps falling past 40 while real values floor out around €300–500K, so the oldest players are systematically under-estimated.",
-};
 
 export function ValuePanel({
   data,
@@ -88,23 +82,16 @@ export function ValuePanel({
         />
 
         <div className="mt-5 space-y-3">
-          <StateChip state="null">Below calibrated range</StateChip>
+          <StateChip state="null">{VALUE.refusalChip}</StateChip>
           <p className="font-prose text-ink-200">
-            Under {c.minimum.toLocaleString()} minutes the per-90 inputs stop
-            measuring anything — one shot in three minutes reads as 30 shots per 90.
+            {VALUE.refusalFinding(c.minimum)}
           </p>
           <Disclosure label="Why the model refuses rather than extrapolating">
-            <p>
-              Below roughly one season of football the per-90 rates are not rates,
-              they are noise with a very small denominator. An earlier version of
-              this model, given a player with 38 minutes and one assist, produced a
-              prediction in the hundreds of billions of euros.
-            </p>
-            <p className="mt-3">
-              The deeper reason is that players with limited minutes are priced on
-              potential and transfer hype, which nothing in this feature set can
-              observe. Refusing is the honest answer, not a gap to be filled.
-            </p>
+            {VALUE.refusalDetail.map((para, i) => (
+              <p key={para.slice(0, 24)} className={i > 0 ? "mt-3" : undefined}>
+                {para}
+              </p>
+            ))}
           </Disclosure>
         </div>
       </Panel>
@@ -144,8 +131,8 @@ export function ValuePanel({
             says why, or what it means. */}
         <p className="font-prose text-ink-200">
           {data.caveats.length > 0
-            ? CAVEAT_TEXT[data.caveats[0]!.key]
-            : `A ×${e.error_factor} band around ${eur(e.point_eur)}, which is the typical size of a miss rather than a bound.`}
+            ? VALUE_CAVEATS[data.caveats[0]!.key]
+            : VALUE.defaultFinding(e.error_factor, eur(e.point_eur))}
         </p>
 
         <Disclosure label="What the band means, and what it does not">
@@ -153,23 +140,14 @@ export function ValuePanel({
             The ×{e.error_factor} range is a <em>typical-error</em> band, not a
             confidence interval.
             {bandCoverage !== null && (
-              <>
-                {" "}
-                The actual value lands inside it for {pct(bandCoverage)} of
-                players, measured out of fold — so roughly two in five fall
-                outside.
-              </>
+              <> {VALUE.bandCoverage(pct(bandCoverage))}</>
             )}
           </p>
-          <p className="mt-3">
-            The model predicts log value, so the figure shown is a conditional
-            median rather than a mean. These estimates should not be summed to
-            value a squad without a smearing correction.
-          </p>
+          <p className="mt-3">{VALUE.bandDetail}</p>
           {data.caveats.length > 1 &&
             data.caveats.slice(1).map((c) => (
               <p className="mt-3" key={c.key}>
-                {CAVEAT_TEXT[c.key]}
+                {VALUE_CAVEATS[c.key]}
               </p>
             ))}
         </Disclosure>

@@ -66,6 +66,8 @@ export type HeldOutForecast = ForecastOk | ForecastOutOfScope;
 /* -- 03 style ------------------------------------------------------------- */
 
 export type StyleAssignment = Schemas["StyleAssignmentResponse"];
+export type StylePlayerListItem = Schemas["StylePlayerListItem"];
+export type MatchListItem = Schemas["MatchListItem"];
 
 /* -- transport ------------------------------------------------------------ */
 
@@ -101,5 +103,31 @@ export const api = {
     },
     estimate: (playerId: number) =>
       get<ValueEstimate>(`/value/players/${playerId}/estimate`),
+  },
+
+  match: {
+    meta: () => get<ToolMeta>("/match/meta"),
+    seasons: () => get<number[]>("/match/seasons"),
+    clubs: (season: number) =>
+      get<string[]>(`/match/clubs?season=${season}`),
+    matches: (season: number, club?: string) => {
+      const q = new URLSearchParams({ season: String(season) });
+      if (club) q.set("club", club);
+      return get<MatchListItem[]>(`/match/matches?${q}`);
+    },
+    /** Named for what it is: a stored forecast from a model that had not seen
+     *  this season. Never computed per request (AGENTS.md §2.1). */
+    heldOutForecast: (gameId: number) =>
+      get<HeldOutForecast>(`/match/matches/${gameId}/held-out-forecast`),
+  },
+
+  style: {
+    meta: () => get<ToolMeta>("/style/meta"),
+    players: (position?: string) => {
+      const qs = position ? `?position=${encodeURIComponent(position)}` : "";
+      return get<StylePlayerListItem[]>(`/style/players${qs}`);
+    },
+    assignment: (slug: string) =>
+      get<StyleAssignment>(`/style/players/${encodeURIComponent(slug)}/assignment`),
   },
 };

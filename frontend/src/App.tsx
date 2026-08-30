@@ -1,15 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { TopBar } from "./components/shell/TopBar";
 import { ValueTool } from "./tools/value/ValueTool";
-
-function Placeholder({ name }: { name: string }) {
-  return (
-    <p className="font-prose text-ink-300">
-      {name} is not built yet. Step 5 ships the shell and project 01 end to end;
-      the remaining marks and tools follow in Step 6 against a proven base.
-    </p>
-  );
-}
+import { MatchTool } from "./tools/match/MatchTool";
+import { StyleTool } from "./tools/style/StyleTool";
 
 export default function App() {
   return (
@@ -19,8 +12,12 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/value" replace />} />
           <Route path="/value" element={<ValueTool />} />
-          <Route path="/match" element={<Placeholder name="Match predictor" />} />
-          <Route path="/style" element={<Placeholder name="Style finder" />} />
+          <Route path="/match" element={<MatchTool />} />
+          {/* game_id in the path so a fixture is linkable, and so a bookmarked
+              out-of-scope match renders its explanation rather than 500-ing. */}
+          <Route path="/match/:gameId" element={<MatchTool />} />
+          <Route path="/style" element={<StyleTool />} />
+          <Route path="/style/:slug" element={<StyleTool />} />
         </Routes>
       </main>
     </div>
