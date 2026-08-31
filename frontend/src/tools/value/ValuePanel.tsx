@@ -63,7 +63,7 @@ export function ValuePanel({
   if (data.status === "not_calibrated") {
     const c = data.calibration;
     return (
-      <Panel>
+      <Panel tone="result" animate>
         {header}
         <div className="mb-5">
           <div className="label mb-2">Estimate</div>
@@ -83,7 +83,7 @@ export function ValuePanel({
 
         <div className="mt-5 space-y-3">
           <StateChip state="null">{VALUE.refusalChip}</StateChip>
-          <p className="font-prose text-ink-200">
+          <p className="finding">
             {VALUE.refusalFinding(c.minimum)}
           </p>
           <Disclosure label="Why the model refuses rather than extrapolating">
@@ -103,7 +103,7 @@ export function ValuePanel({
   const inside = data.actual.inside_band === true;
 
   return (
-    <Panel>
+    <Panel tone="result" animate>
       {header}
 
       <div className="mb-4">
@@ -129,7 +129,7 @@ export function ValuePanel({
         {/* One sentence. It does not restate what the mark already shows -- the
             band's geometry says whether the actual fell inside it -- so this
             says why, or what it means. */}
-        <p className="font-prose text-ink-200">
+        <p className="finding">
           {data.caveats.length > 0
             ? VALUE_CAVEATS[data.caveats[0]!.key]
             : VALUE.defaultFinding(e.error_factor, eur(e.point_eur))}

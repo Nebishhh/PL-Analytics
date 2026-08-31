@@ -7,6 +7,12 @@
  * nothing else. Hue carries navigation; the semantic scale carries meaning.
  * These are raw custom properties rather than Tailwind utilities precisely so
  * that no `bg-tool-01` class exists to be applied to a chart by autocomplete.
+ *
+ * The active state was a 2px underline and nothing else, which is legible but
+ * timid -- the one place the system is allowed to use hue with confidence was
+ * using it apologetically. The active item now also takes the accent as its
+ * text colour and a tinted ground. Still wayfinding, still nowhere near a
+ * mark.
  */
 
 import { NavLink } from "react-router-dom";
@@ -33,15 +39,19 @@ export function TopBar() {
         >
           PL·ANALYTICS
         </span>
+
         <nav className="flex gap-1">
           {TOOLS.map((t) => (
             <NavLink
               key={t.to}
               to={t.to}
-              className="rounded px-3 py-1.5"
+              className="hoverable rounded-t px-3 py-1.5"
               style={({ isActive }) => ({
                 fontSize: "var(--t-body)",
-                color: isActive ? "var(--ink-100)" : "var(--ink-300)",
+                color: isActive ? t.accent : "var(--ink-300)",
+                background: isActive
+                  ? `color-mix(in srgb, ${t.accent} 10%, transparent)`
+                  : "transparent",
                 borderBottom: isActive
                   ? `2px solid ${t.accent}`
                   : "2px solid transparent",
@@ -56,7 +66,7 @@ export function TopBar() {
             not a fourth tool, so it does not take a tool colour. */}
         <NavLink
           to="/about"
-          className="ml-auto rounded px-3 py-1.5"
+          className="hoverable ml-auto rounded px-3 py-1.5"
           style={({ isActive }) => ({
             fontSize: "var(--t-body)",
             color: isActive ? "var(--ink-100)" : "var(--ink-300)",

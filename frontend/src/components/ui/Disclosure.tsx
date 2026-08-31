@@ -24,7 +24,7 @@ export function Disclosure({
   return (
     <Collapsible.Root open={open} onOpenChange={setOpen}>
       <Collapsible.Trigger
-        className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-ink-300 hover:text-ink-100"
+        className="hoverable flex w-full items-center gap-2 rounded px-2 py-2 text-left text-ink-300 hover:text-ink-100"
         style={{ fontSize: "var(--t-body)" }}
       >
         <ChevronRight
@@ -32,12 +32,15 @@ export function Disclosure({
           aria-hidden
           style={{
             transform: open ? "rotate(90deg)" : "none",
-            transition: "transform 120ms",
+            transition: "transform var(--dur-fast) var(--ease-out)",
           }}
         />
         {label}
       </Collapsible.Trigger>
-      <Collapsible.Content>
+      {/* Height is animated from Radix's measured value rather than a guessed
+          max-height, so long caveats do not snap open at a different speed
+          from short ones. Overflow is hidden only while it moves. */}
+      <Collapsible.Content className="disclosure-content overflow-hidden">
         <div className="font-prose px-2 pb-2 pt-1 text-ink-200">{children}</div>
       </Collapsible.Content>
     </Collapsible.Root>

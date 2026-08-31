@@ -87,18 +87,21 @@ export function ValueTool() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div>
+      {/* Three bands of space, not one even stack: title, then the controls a
+          reader operates, then the result. The gap before the result is the
+          widest on the page, because that is the boundary that matters. */}
+      <header className="mb-8">
         <h1 className="text-ink-100" style={{ fontSize: "var(--t-display)" }}>
           Market value estimate
         </h1>
-        <p className="font-prose mt-2 text-ink-300">
+        <p className="font-prose mt-3 text-ink-300" style={{ maxWidth: "58ch" }}>
           What a Premier League player is worth, from his career-to-date league
           record — and how much of that estimate to trust.
         </p>
-      </div>
+      </header>
 
-      <Panel>
+      <Panel tone="recessed">
         <div className="grid gap-4 md:grid-cols-[1fr_1fr_2fr]">
           <SimpleSelect
             label="Club"
@@ -129,10 +132,11 @@ export function ValueTool() {
         </div>
       </Panel>
 
+      <div className="mt-8">
       {result ? (
         <ValuePanel data={result} bandCoverage={bandCoverage} />
       ) : (
-        <Panel>
+        <Panel tone="recessed">
           <p className="font-prose text-ink-300">
             {selected === null
               ? `Pick a player to see an estimate. ${players?.length ?? "…"} Premier League players are available — including those the model declines to price, which are marked in the list.`
@@ -140,6 +144,7 @@ export function ValueTool() {
           </p>
         </Panel>
       )}
+      </div>
     </div>
   );
 }
@@ -162,7 +167,7 @@ function SimpleSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded px-3 py-2"
+        className="hoverable w-full rounded px-3 py-2"
         style={{
           background: "var(--ink-800)",
           border: "1px solid var(--ink-700)",

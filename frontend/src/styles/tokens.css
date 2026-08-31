@@ -33,6 +33,19 @@
      being blended into the page, because restyling the evidence to match the
      palette is how the app's picture and the README's picture drift apart. */
   --plot-ground: #ffffff;
+
+  /* -- motion ---------------------------------------------------------------
+     Chrome only. Nothing here animates a mark's geometry: a band that grows or
+     a needle that travels reads as the instrument still making up its mind.
+     All of it is removed under prefers-reduced-motion, and nothing in it
+     carries meaning, so removing it removes nothing (DESIGN.md §10). */
+  --dur-fast: 110ms;
+  --dur: 190ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Set per route by the shell. Wayfinding only -- V1 forbids this appearing
+     on any data mark, which the marks/ grep check enforces. */
+  --accent: var(--ink-400);
   --state-null: #5b6478;
 
   /* --- tool accents: wayfinding only, never a data mark ------------------- */
@@ -60,6 +73,11 @@
   --t-figure: 20px;
   --t-value: 30px;
   --t-display: 38px;
+  /* The findings sit between prose and figure. They are the project's actual
+     claims, and at --t-prose they read at the same weight as the label above
+     them. Size and colour carry the hierarchy, not weight -- V10 allows only
+     400 and 600. */
+  --t-finding: 19px;
 
   /* --- spacing, 4px grid -------------------------------------------------- */
   --s-1: 4px;
@@ -92,5 +110,12 @@
 
   --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --font-prose: "IBM Plex Serif", Georgia, serif;
+  /* Newsreader, not IBM Plex Serif. Measured against IBM Plex Sans, Plex Serif
+     has an identical cap height (70), an identical x-height (52) and a round-o
+     within 0.4 units -- it shares the sans's skeleton, because that is what a
+     superfamily is. Its stroke contrast is 1.87 against the sans's 1.24, so the
+     only thing separating a finding from the chrome was the serifs themselves.
+     Newsreader carries ~4x the sans's contrast while keeping the same x-height
+     and cap height, so this scale needed no retuning to absorb it. */
+  --font-prose: "Newsreader Variable", Georgia, serif;
 }

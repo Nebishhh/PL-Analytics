@@ -6,7 +6,10 @@
 @import "@fontsource/ibm-plex-sans/600.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/600.css";
-@import "@fontsource/ibm-plex-serif/400.css";
+/* Variable cut, for the optical-size axis. Newsreader flattens its stroke
+   contrast at small opsz, which is what keeps the hairlines from going
+   fragile in light-on-dark prose at 16px. */
+@import "@fontsource-variable/newsreader/opsz.css";
 
 /* Only two weights exist in this system, 400 and 600. An instrument panel
  * needs contrast between label and value, which the type scale already
@@ -48,6 +51,10 @@ pre {
   font-family: var(--font-prose);
   font-size: var(--t-prose);
   line-height: 1.6;
+  /* Let the face pick its optical size from the rendered size. At 16px this
+     pulls contrast down; the display cut would put 5:1 hairlines into body
+     prose on a dark ground. */
+  font-optical-sizing: auto;
 }
 
 /* Labels read as labels, not body text. */
@@ -73,4 +80,83 @@ pre {
 :focus-visible {
   outline: 2px solid var(--state-clear);
   outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   High-craft layer (Step 7). Chrome only -- no rule below touches a data mark.
+   --------------------------------------------------------------------------- */
+
+/* The one-sentence finding beside each mark. DESIGN.md §2 reserves the serif
+   for exactly this, but reserving the FACE was not enough on its own: at
+   --t-prose in --ink-200 a finding sat at the same visual weight as the label
+   above it, so the project's actual claims read as captions. Size and colour
+   do the work here; V10 permits no third weight. */
+.finding {
+  font-family: var(--font-prose);
+  font-size: var(--t-finding);
+  line-height: 1.5;
+  color: var(--ink-100);
+  font-optical-sizing: auto;
+  text-wrap: pretty;
+  max-width: 60ch;
+}
+
+/* Panel content on selection. Opacity and a few pixels of travel on the
+   CONTAINER -- never on a rail's width or a needle's position. */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.panel-in {
+  animation: panel-in var(--dur) var(--ease-out) both;
+}
+
+/* Radix Collapsible, which publishes the measured height as a custom property
+   so the expand can be animated without measuring it here. */
+@keyframes disclosure-down {
+  from { height: 0; opacity: 0; }
+  to   { height: var(--radix-collapsible-content-height); opacity: 1; }
+}
+@keyframes disclosure-up {
+  from { height: var(--radix-collapsible-content-height); opacity: 1; }
+  to   { height: 0; opacity: 0; }
+}
+[data-state="open"].disclosure-content {
+  animation: disclosure-down var(--dur) var(--ease-out);
+}
+[data-state="closed"].disclosure-content {
+  animation: disclosure-up var(--dur-fast) var(--ease-out);
+}
+
+/* Interactive chrome. Hover and focus are the two states this system had no
+   opinion about, which read as unfinished rather than restrained. */
+.hoverable {
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.hoverable:hover {
+  border-color: var(--ink-600);
+  background: var(--ink-800);
+}
+
+/* One focus ring, in the active tool's accent. Wayfinding colour doing
+   wayfinding work: it says which tool you are in while you are keyboarding
+   through it. Never applied inside a mark (V1). */
+:where(a, button, select, input, [role="combobox"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Route change. A short cross-fade so switching tools does not feel like a
+   page reload; no travel, because the two pages are peers rather than a
+   sequence. */
+@keyframes route-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.route-in {
+  animation: route-in var(--dur) var(--ease-out) both;
 }
