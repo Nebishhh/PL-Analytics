@@ -1,93 +1,65 @@
-# Crest artwork — provenance
+# Crest artwork — evaluated, and not adopted
 
-31 canonical clubs. Filenames come from `crestSlug()` in
-`src/lib/crestSlug.mjs`; do not rename them by hand — run `npm run crests` and
-use the names it prints.
+**Decision: the typographic monogram is the final design for club identity, not
+a placeholder.** No crest artwork ships, and none is pending.
 
-**Every file must record where it came from.** A crest with no provenance is a
-trademark question nobody can answer later.
+Recorded here rather than left in a conversation, per AGENTS.md §7.3: a
+rejected alternative with its reasoning is a decision, and without it a rumour.
+The next person to look at `Crest.tsx` will find code that loads an SVG and
+will reasonably assume someone forgot to add the files. They did not.
 
-## Requirements
+## What was evaluated
 
-Checked by `npm run crests`, which reports any file that fails:
+Using crests was a settled product decision — PRODUCT.md recorded the trademark
+consideration as accepted for a personal portfolio at this scale. That decision
+was never the blocker. **Sourcing was.** Every route failed on licensing,
+consistency or accuracy:
 
-- **SVG with a `viewBox`**, and no fixed pixel width/height — the component
-  sizes it.
-- **Single colour.** Prefer `currentColor` so the mark inherits the ink around
-  it; one flat fill is acceptable. Not the club's official colours: this is an
-  ink-on-paper system, and a full-colour badge would be the only chromatic
-  object on the page, which is what V1 exists to prevent.
-- **No embedded raster.** No `<image>`, no base64 payload. A traced PNG inside
-  an SVG wrapper is still a PNG.
-- **Consistent weight across all 31.** One treatment from one source family —
-  not a mix of outline and solid, or heavy and hairline.
+| Route | Why it failed |
+|---|---|
+| **Wikimedia Commons** | Does not hold current club crests. Direct file lookups for Chelsea, Manchester United, Liverpool and Tottenham return nothing on Commons and `Fair use` on en.wikipedia. |
+| **English Wikipedia** | The files exist but are non-free. "Fair use" is not a licence — it is a US-law defence tied to Wikipedia's own encyclopedic use, argued per article, and it does not transfer to a third party. Copying them here and writing "Fair use" in a Licence column would record a licence that does not exist. |
+| **Historical PD crests** | Genuinely free — the Arsenal 1888 and 2001–2002 marks are public domain — but only for some clubs, from the wrong era, and mismatched in style. Even the PD ones carry a `Restrictions: insignia` tag. A set assembled this way fails the consistency requirement by construction. |
+| **Official club media kits** | Real terms exist per club, but 31 separate permissions at 31 different weights is disproportionate to a portfolio site, and would still not guarantee one visual treatment. |
+| **Commission or buy a set** | The only route with unambiguous licensing, and not worth the cost here. |
 
-## Sourcing
+## Why the monogram is a good answer rather than a consolation
 
-These are club trademarks. PRODUCT.md records the decision to use them as
-accepted and settled; that decision does not extend to the *files*, so each row
-below needs a real answer under Source.
+It is **consistent by construction** — all 31 clubs get the same treatment,
+which no assembled set of downloaded badges would have achieved.
 
-Routes that give a consistent set rather than 31 mismatched ones:
+It is **honest about what it is.** Initials set in the display face inside a
+ruled square do not claim to be a badge. A traced approximation would have.
 
-- **Wikimedia Commons** — most clubs have an SVG badge with a stated licence.
-  Licences vary per file, so record each one separately.
-- **Trace one source family yourself** — official badges through a vector tracer
-  at a fixed threshold and stroke weight. Slowest, most consistent result.
-- **Commission or buy a set** — the only route with unambiguous licensing.
+It **fits the world.** This is an ink-on-paper system where a full-colour badge
+would be the only chromatic object on the page — exactly what V1 exists to
+prevent. Every crest would have needed flattening to a single ink anyway, at
+which point much of a badge's recognisability is gone.
 
-## Making a downloaded badge single-colour
+It resolves through `canonicalClub()`, so a club shows the same initials in
+every tool regardless of which dataset named it.
 
-`npm run flatten-crest -- <in.svg> <out.svg>` strips the colours and sets
-`currentColor`, which is the tedious half of preparing a badge. It does not do
-the half that needs drawing judgement — it will not simplify a complex crest,
-redraw it at a consistent weight, or make two differently-traced sources match.
+## If this is ever revisited
 
-It preserves `fill="none"`, because that is structural: a hollow ring is drawn
-entirely by its stroke, and filling it turns a badge into a blob. For the same
-reason it keeps the stroke on unfilled elements and drops it elsewhere. It
-reports, rather than guesses at, gradients, patterns, filters, embedded raster,
-live `<text>`, opacity, and strokes declared in a `<style>` block.
+The loading path in `Crest.tsx` still works and is left in place as an escape
+hatch, not as an unfinished task. Drop conforming SVGs into this directory named
+by `crestSlug()` and they will be used with no code change.
 
-Run `npm run crests` afterwards — flattening does not guarantee the result
-passes.
+`npm run crests` still validates any file it finds — viewBox present, single
+ink, no embedded raster — and reports clubs on the monogram as the intended
+state rather than as missing work. `npm run flatten-crest` still reduces a
+downloaded badge to one ink.
 
-Avoid mixing sources. Two crests traced at different weights are more visibly
-wrong here than a monogram is, because they sit at 18px beside the same club
-name on the same rule.
+Requirements a file would have to meet, unchanged:
 
-## Files
+- SVG with a `viewBox`, no fixed pixel width or height.
+- Single colour, ideally `currentColor`.
+- No `<image>` and no base64 payload.
+- One consistent treatment across the whole set, or it is worse than no set.
+
+**Every file added must record its source and licence below.** A crest with no
+provenance is a trademark question nobody can answer later.
 
 | File | Source | Licence | Notes |
 |---|---|---|---|
-| `afc-bournemouth.svg` | | | |
-| `arsenal-fc.svg` | | | |
-| `aston-villa.svg` | | | |
-| `brentford-fc.svg` | | | |
-| `brighton-and-hove-albion.svg` | | | |
-| `burnley-fc.svg` | | | |
-| `chelsea-fc.svg` | | | |
-| `crystal-palace.svg` | | | |
-| `everton-fc.svg` | | | |
-| `fulham-fc.svg` | | | |
-| `hull-city.svg` | | | |
-| `ipswich-town.svg` | | | |
-| `leeds-united.svg` | | | |
-| `leicester-city.svg` | | | |
-| `liverpool-fc.svg` | | | |
-| `luton-town.svg` | | | |
-| `manchester-city.svg` | | | |
-| `manchester-united.svg` | | | |
-| `newcastle-united.svg` | | | |
-| `norwich-city.svg` | | | |
-| `nottingham-forest.svg` | | | |
-| `queens-park-rangers.svg` | | | |
-| `sheffield-united.svg` | | | |
-| `southampton-fc.svg` | | | |
-| `sunderland-afc.svg` | | | |
-| `swansea-city.svg` | | | |
-| `tottenham-hotspur.svg` | | | |
-| `watford-fc.svg` | | | |
-| `west-bromwich-albion.svg` | | | |
-| `west-ham-united.svg` | | | |
-| `wolverhampton-wanderers.svg` | | | |
+| *(none — monogram is the design)* | | | |

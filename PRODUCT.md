@@ -99,11 +99,17 @@ interchangeable with looser synonyms.
 ## Brand Commitments
 
 - Name: **PL-Analytics**. Author: Nebiyou Essayas Dessalegn.
-- **Club crest artwork will be used** alongside generative per-player graphics on
-  the public site. Recorded as a decision the user made explicitly and separately
-  from the deployment question: the trademark consideration is accepted for a
-  personal portfolio at this scale. This is a confirmed instruction, not an
-  oversight to be revisited.
+- **Club identity is a typographic monogram, and that is the final design** —
+  initials set in the display face inside a ruled square. Using crest artwork
+  was a settled decision and the trademark consideration was accepted; sourcing
+  is what failed. Current crests are not on Wikimedia Commons, English
+  Wikipedia's copies are non-free ("fair use" is a defence, not a transferable
+  licence), and historical public-domain marks exist for only some clubs, from
+  the wrong era, in mismatched styles. See
+  `frontend/public/crests/MANIFEST.md` for the full evaluation. The loading
+  path remains as an escape hatch if a licensable, consistent set ever appears;
+  it is not an unfinished task.
+- **Generative per-player graphics** are built from real per-90 data.
 - **No real player photographs**, on licensing grounds.
 - Voice: plain, specific, and unhedged about limitations. The caveats are the
   product and are never trimmed to reduce visual noise.

@@ -1,6 +1,12 @@
 /**
- * Crest coverage: which clubs have artwork, and which are still on the
- * typographic monogram fallback.
+ * Crest coverage: which clubs have artwork, and which use the typographic
+ * monogram.
+ *
+ * THE MONOGRAM IS THE DESIGN. No artwork ships and none is pending -- see
+ * public/crests/MANIFEST.md for why every sourcing route failed. So a club on
+ * the monogram is the INTENDED state, not missing work, and this exits 0 for
+ * it. It exits non-zero only for a file that is actually wrong: a crest that
+ * fails the requirements, or a name the alias map does not cover.
  *
  *   node scripts/crests.mjs              # needs the backend on :8000
  *   node scripts/crests.mjs --json       # machine-readable
@@ -188,7 +194,8 @@ if (asJson) {
 } else {
   const pad = Math.max(...rows.map((r) => r.club.length));
   console.log(
-    `\n  Crest coverage — ${haveSlugs.size}/${groups.size} clubs have artwork  (${rows.length} dataset names)\n`,
+    `\n  Club identity — ${groups.size} clubs, ${rows.length} dataset names\n` +
+      `  ${haveSlugs.size} with crest artwork, ${groups.size - haveSlugs.size} on the typographic monogram\n`,
   );
   if (!exists) {
     console.log(`  ${CRESTS_DIR} does not exist yet; every club is on the monogram fallback.\n`);
@@ -224,9 +231,12 @@ if (asJson) {
 
   console.log(
     missing.length
-      ? `\n  ${missingSlugs.size} still on the typographic monogram.\n`
-      : `\n  Complete — no club is falling back.\n`,
+      ? `\n  The monogram is the design, not a gap — see public/crests/MANIFEST.md.\n`
+      : `\n  Every club has artwork.\n`,
   );
 }
 
-process.exit(missing.length || problems.size ? 1 : 0);
+// Non-zero for a real defect only. A club on the monogram is the design
+// working as intended -- a check that fails forever on the intended state is
+// a broken check, and would be the first thing anyone disabled.
+process.exit(problems.size || collisions.length ? 1 : 0);

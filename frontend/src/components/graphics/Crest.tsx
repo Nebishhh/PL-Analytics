@@ -1,19 +1,22 @@
 /**
  * A club crest.
  *
- * PRODUCT.md records crests as an accepted decision. The artwork itself is not
- * in this repository and never has been -- no crest, logo or badge file is
- * tracked. So this renders real artwork when a file is present at
- * `/crests/<slug>.svg` and falls back to a typographic monogram otherwise.
+ * THE MONOGRAM IS THE DESIGN, NOT A PLACEHOLDER. No crest artwork ships and
+ * none is pending. Initials set in the display face inside a ruled square is
+ * what a printed almanac does when it cannot print a badge, and it is honest in
+ * a way a traced approximation is not: it shows the club, at the right size, in
+ * the right voice, without claiming to be a logo it is not.
  *
- * The fallback is not a placeholder to be replaced in a hurry. Initials set in
- * the display face inside a ruled square is what a printed almanac does when it
- * cannot print a badge, and it is honest in a way a grey box is not: it shows
- * the club, at the right size, in the right voice, without pretending to be a
- * logo it does not have.
+ * Using crests was a settled decision; sourcing failed. Current crests are not
+ * on Wikimedia Commons, English Wikipedia's copies are non-free, and historical
+ * public-domain marks cover only some clubs in mismatched styles. The full
+ * evaluation is in `public/crests/MANIFEST.md`, recorded there so this file
+ * does not read as work someone forgot to finish.
  *
- * To supply real artwork: drop single-colour SVGs into `frontend/public/crests/`
- * named by the slug this component receives. Nothing else needs to change.
+ * The loading path below is an escape hatch, not a TODO. If a licensable,
+ * consistent set ever appears, drop single-colour SVGs into
+ * `frontend/public/crests/` named by `crestSlug()` and they are used with no
+ * code change.
  */
 
 import { useState } from "react";
