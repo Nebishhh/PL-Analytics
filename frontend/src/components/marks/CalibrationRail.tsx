@@ -13,7 +13,7 @@
  * Everything here is --state-null grey. Never red.
  */
 
-import { Dot, Hatch, Rail, stateColor } from "./Rail";
+import { Observed, OutOfRange, Rail } from "./Rail";
 import { eur, logPosition } from "../../lib/format";
 
 interface Props {
@@ -47,10 +47,13 @@ export function CalibrationRail({
     <div className="space-y-5">
       <div>
         <Rail ariaLabel="No estimate: this player is outside the model's calibrated range.">
-          <Hatch />
-          <Dot at={logPosition(actual, vMin, vMax)} state="null" />
+          {/* Deliberately empty. DESIGN.md §5.4: absence is drawn as an
+              empty trough, not as a hatched "blocked" fill, which would read
+              as an error rather than as no reading. The em-dash carrying the
+              missing figure lives in the panel above. */}
+          <Observed at={logPosition(actual, vMin, vMax)} />
         </Rail>
-        <div className="mt-2 flex justify-between font-mono text-ink-400"
+        <div className="mt-2 flex justify-between font-mono text-ink-300"
              style={{ fontSize: "var(--t-micro)" }}>
           <span>no reading</span>
           <span>actual {eur(actual)}</span>
@@ -76,19 +79,13 @@ export function CalibrationRail({
             style={{
               left: `${inPos(domainMin) * 100}%`,
               right: 0,
-              background: "var(--ink-700)",
+              background: "var(--signal-3)",
+              opacity: 0.12,
             }}
           />
-          <div
-            className="absolute inset-y-0"
-            style={{
-              left: `${inPos(value) * 100}%`,
-              width: "var(--tick-w)",
-              background: stateColor("null"),
-            }}
-          />
+          <OutOfRange at={inPos(value)} />
         </Rail>
-        <div className="mt-2 font-mono text-ink-400"
+        <div className="mt-2 font-mono text-ink-300"
              style={{ fontSize: "var(--t-micro)" }}>
           this player: {value.toLocaleString()} {field.replace(/_/g, " ")}
         </div>

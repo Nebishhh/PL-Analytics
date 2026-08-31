@@ -17,15 +17,25 @@
  * cannot be compared across matches.
  */
 
-import { Rail, stateColor, type MarkState } from "./Rail";
+import { Rail, textureStyle, type Texture } from "./Rail";
 import { pct } from "../../lib/format";
 
-/** Each outcome keeps one state so a segment means the same thing every time.
- *  These are semantic tokens, never tool accents. */
-const SEGMENT_STATE: Record<string, MarkState> = {
-  H: "clear",
-  D: "moderate",
-  A: "null",
+/**
+ * TEXTURE, NOT THE SIGNAL RAMP -- this is the one place ink density must not
+ * be used (AGENTS.md §3.3).
+ *
+ * Home, Draw and Away are CATEGORICAL. Shading them by weight would imply a
+ * ranking the model never stated, which is the same misreading V5 prevents in
+ * the spatial channel by fixing the order. A segment reading from `--signal-*`
+ * is a violation even when its order is correct.
+ *
+ * Solid / hatched / open is the monochrome convention a printed chart uses for
+ * categories, and every segment is labelled regardless.
+ */
+const SEGMENT_TEXTURE: Record<string, Texture> = {
+  H: "solid",
+  D: "hatched",
+  A: "open",
 };
 
 interface Props {
@@ -71,7 +81,7 @@ export function DistributionRail({
         }
       >
         {segments.map((s) => {
-          const state = SEGMENT_STATE[s.key] ?? "null";
+          const texture = SEGMENT_TEXTURE[s.key] ?? "open";
           const wide = s.width > 0.11;
           return (
             <div
@@ -80,12 +90,11 @@ export function DistributionRail({
               style={{
                 left: `${s.from * 100}%`,
                 width: `${s.width * 100}%`,
-                background: stateColor(state),
-                opacity: s.key === actual ? 0.95 : 0.45,
+                ...textureStyle(texture),
                 color: "var(--ink-900)",
                 fontSize: "var(--t-micro)",
                 fontWeight: 600,
-                borderRight: "1px solid var(--ink-900)",
+                borderRight: "var(--rule-w) solid var(--ink-700)",
               }}
             >
               {wide ? `${s.key} ${pct(s.p)}` : ""}
@@ -99,9 +108,9 @@ export function DistributionRail({
           className="absolute inset-y-0"
           style={{
             left: `${baseline * 100}%`,
-            width: "var(--tick-w)",
-            marginLeft: "calc(var(--tick-w) / -2)",
-            background: "var(--ink-100)",
+            width: "2px",
+            marginLeft: "-1px",
+            background: "var(--ink-900)",
           }}
         />
       </Rail>

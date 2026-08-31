@@ -18,7 +18,8 @@ import { COMMON, STYLE } from "../../lib/copy";
 import { ZonedAxis, type AxisZone } from "../../components/marks/ZonedAxis";
 import { Rail, Needle } from "../../components/marks/Rail";
 import { Disclosure } from "../../components/ui/Disclosure";
-import { Panel } from "../../components/ui/Panel";
+import { PlayerSignature } from "../../components/graphics/PlayerSignature";
+import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
 
 const GROUP_LABEL: Record<string, string> = {
@@ -41,7 +42,7 @@ export function StylePanel({
   const nPlayers = typeof q.n_players === "number" ? q.n_players : 315;
 
   const tierState =
-    a.tier === "CONTESTED" ? "low" : a.tier === "BORDERLINE" ? "moderate" : "clear";
+    a.tier === "CONTESTED" ? "weak" : a.tier === "BORDERLINE" ? "qualified" : "strong";
 
   const margin = num(a.margin_to_next, 3);
 
@@ -58,13 +59,13 @@ export function StylePanel({
   const groups = [...new Set(data.rates.map((r) => r.group))];
 
   return (
-    <Panel>
+    <Sheet>
       <div className="mb-6">
-        <h2 className="text-ink-100" style={{ fontSize: "var(--t-value)" }}>
+        <h2 className="text-ink-900" style={{ fontSize: "var(--t-value)" }}>
           {String(p.name ?? "")}
         </h2>
         <div
-          className="font-mono text-ink-300"
+          className="font-mono text-ink-500"
           style={{ fontSize: "var(--t-micro)" }}
         >
           {String(p.club ?? "")} · {String(p.pos ?? "")} ·{" "}
@@ -78,8 +79,23 @@ export function StylePanel({
         {/* Read from the artefact, never composed here. Terms like "inverted
             winger" would be claims about passing and carrying, and this
             dataset has no such columns (AGENTS.md §2.4). */}
-        <div className="text-ink-100" style={{ fontSize: "var(--t-figure)", lineHeight: 1.35 }}>
+        <div
+          className="text-ink-900"
+          style={{ fontSize: "var(--t-figure)", lineHeight: 1.35 }}
+        >
           {a.cluster_name}
+          {a.negative_silhouette && (
+            <>
+              {" "}
+              <span
+                className="font-display"
+                style={{ color: "var(--accent)" }}
+                aria-label="see footnote"
+              >
+                †
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -89,9 +105,9 @@ export function StylePanel({
             different failure from a narrow margin, and only a handful of
             players trip both. A reader skimming must not miss it. */}
         {a.negative_silhouette && (
-          <StateChip state="low">{STYLE.negativeSilhouetteChip}</StateChip>
+          <StateChip state="weak">{STYLE.negativeSilhouetteChip}</StateChip>
         )}
-        <StateChip state="null">
+        <StateChip state="absent">
           {a.position_adjacent ? "Mostly restates position" : "Mixes positions"}
         </StateChip>
       </div>
@@ -104,7 +120,7 @@ export function StylePanel({
         tier={a.tier}
       />
 
-      <p className="font-prose mt-5 text-ink-200">{finding}</p>
+      <p className="finding mt-5">{finding}</p>
 
       <div className="mt-3">
         <Disclosure label="What margin and silhouette each measure">
@@ -136,14 +152,27 @@ export function StylePanel({
         </Disclosure>
       </div>
 
-      <p className="font-prose mt-4 text-ink-400" style={{ fontSize: "var(--t-body)" }}>
+      <p className="mt-4 text-ink-300" style={{ fontSize: "var(--t-body)" }}>
         {COMMON.positionHeldOut}
       </p>
 
       {/* The same rail again, third context: each rate as a percentile
           position rather than a bare number. */}
       <div className="mt-6 border-t pt-5" style={{ borderColor: "var(--ink-700)" }}>
-        <div className="label mb-4">The ten rates that produced it</div>
+        <div className="mb-4 flex items-start justify-between gap-6">
+          <div className="label">The ten rates that produced it</div>
+          {/* The same ten numbers as a closed figure. Every vertex is a real
+              percentile in the order below -- a portrait, not a reading, which
+              is why it carries no confidence signal of its own. */}
+          <PlayerSignature
+            rates={data.rates.map((r) => ({
+              key: r.key,
+              label: r.label,
+              percentile: r.percentile,
+            }))}
+            label={`Percentile profile across ten per-90 rates for ${String(p.name ?? "this player")}.`}
+          />
+        </div>
         <div className="space-y-6">
           {groups.map((g) => (
             <div key={g}>
@@ -154,22 +183,22 @@ export function StylePanel({
                   .map((r) => (
                     <div key={r.key}>
                       <div className="mb-1 flex items-baseline justify-between">
-                        <span className="text-ink-200" style={{ fontSize: "var(--t-body)" }}>
+                        <span className="text-ink-700" style={{ fontSize: "var(--t-body)" }}>
                           {r.label}
                         </span>
                         <span
-                          className="font-mono text-ink-100"
+                          className="font-mono text-ink-900"
                           style={{ fontSize: "var(--t-body)" }}
                         >
                           {num(r.value, 2)}
-                          <span className="ml-2 text-ink-400">
+                          <span className="ml-2 text-ink-300">
                             {ordinal(r.percentile)} pct
                           </span>
                         </span>
                       </div>
-                      <div style={{ ["--rail-h" as string]: "10px" }}>
+                      <div style={{ ["--rail-h" as string]: "var(--rail-h-mini)" }}>
                         <Rail ariaLabel={`${r.label}: ${ordinal(r.percentile)} percentile`}>
-                          <Needle at={r.percentile / 100} state="clear" />
+                          <Needle at={r.percentile / 100} state="strong" />
                         </Rail>
                       </div>
                     </div>
@@ -179,6 +208,6 @@ export function StylePanel({
           ))}
         </div>
       </div>
-    </Panel>
+    </Sheet>
   );
 }

@@ -26,19 +26,13 @@ import { Link } from "react-router-dom";
 import { api, type AppMeta, type ToolSummary } from "../lib/api";
 import { eur, num, pct } from "../lib/format";
 import { ABOUT } from "../lib/copy";
-import { Panel } from "../components/ui/Panel";
+import { Notice, Section, Sheet } from "../components/ui/Sheet";
 import { Disclosure } from "../components/ui/Disclosure";
 
 const TOOL_ROUTE: Record<string, string> = {
   value: "/value",
   match: "/match",
   style: "/style",
-};
-
-const TOOL_ACCENT: Record<string, string> = {
-  value: "var(--tool-01)",
-  match: "var(--tool-02)",
-  style: "var(--tool-03)",
 };
 
 /**
@@ -63,7 +57,7 @@ function Plot({ src }: { src: string }) {
     <figure className="m-0">
       <div
         className="overflow-hidden rounded"
-        style={{ border: "1px solid var(--ink-700)", background: "var(--plot-ground)" }}
+        style={{ border: "var(--rule-w) solid var(--rule-200)", background: "var(--plot-ground)" }}
       >
         {/* Deliberately NOT loading="lazy". These mount inside a collapsed
             Radix disclosure, so they enter the DOM with no intrinsic height,
@@ -80,7 +74,7 @@ function Plot({ src }: { src: string }) {
       </div>
       {caption && (
         <figcaption
-          className="font-prose mt-2 text-ink-300"
+          className="mt-2 text-ink-500"
           style={{ fontSize: "var(--t-body)" }}
         >
           {caption}
@@ -103,13 +97,13 @@ function Headline({ tool }: { tool: ToolSummary }) {
     return (
       <>
         {r2 !== null && sd !== null && (
-          <p className="font-prose text-ink-100"
-            style={{ fontSize: "var(--t-prose)" }}>
+          <p className="text-ink-900"
+            style={{ fontSize: "var(--t-body)" }}>
             {ABOUT.value.headline(num(r2, 3), num(sd, 3), scheme)}
           </p>
         )}
         {ef !== null && (
-          <p className="font-prose mt-2 text-ink-200">
+          <p className="mt-2 text-ink-700">
             {/* Both ends are computed from the served factor rather than typed
                 in: 10M divided by it, and 10M multiplied by it. */}
             {ABOUT.value.band(
@@ -120,7 +114,7 @@ function Headline({ tool }: { tool: ToolSummary }) {
           </p>
         )}
         {oof !== null && (
-          <p className="font-prose mt-2 text-ink-300">
+          <p className="mt-2 text-ink-500">
             {ABOUT.value.coverage(pct(oof))}
           </p>
         )}
@@ -137,8 +131,8 @@ function Headline({ tool }: { tool: ToolSummary }) {
     return (
       <>
         {acc !== null && sd !== null && base !== null && (
-          <p className="font-prose text-ink-100"
-            style={{ fontSize: "var(--t-prose)" }}>
+          <p className="text-ink-900"
+            style={{ fontSize: "var(--t-body)" }}>
             {ABOUT.match.headline(
               num(acc, 3),
               num(sd, 3),
@@ -148,11 +142,11 @@ function Headline({ tool }: { tool: ToolSummary }) {
           </p>
         )}
         {f1 !== null && (
-          <p className="font-prose mt-2 text-ink-200">
+          <p className="mt-2 text-ink-700">
             {ABOUT.match.f1(num(f1, 3), scheme)}
           </p>
         )}
-        <p className="font-prose mt-2 text-ink-300">{ABOUT.match.theTrade}</p>
+        <p className="mt-2 text-ink-500">{ABOUT.match.theTrade}</p>
       </>
     );
   }
@@ -163,11 +157,11 @@ function Headline({ tool }: { tool: ToolSummary }) {
   return (
     <>
       {k !== null && nPlayers !== null && (
-        <p className="font-prose text-ink-100"
-            style={{ fontSize: "var(--t-prose)" }}>{ABOUT.style.headline(k, nPlayers, 10)}</p>
+        <p className="text-ink-900"
+            style={{ fontSize: "var(--t-body)" }}>{ABOUT.style.headline(k, nPlayers, 10)}</p>
       )}
       {sil !== null && (
-        <p className="font-prose mt-2 text-ink-200">
+        <p className="mt-2 text-ink-700">
           {ABOUT.style.silhouette(num(sil, 3))}
         </p>
       )}
@@ -193,45 +187,45 @@ export function About() {
 
   if (error) {
     return (
-      <Panel title="Backend unavailable">
-        <p className="font-prose text-ink-200">
+      <Notice title="Backend unavailable">
+        <p className="text-ink-700">
           {error}. The API should be running on 127.0.0.1:8000.
         </p>
-      </Panel>
+      </Notice>
     );
   }
 
   if (!meta) {
     return (
-      <Panel>
-        <p className="font-prose text-ink-300">Loading…</p>
-      </Panel>
+      <Sheet>
+        <p className="text-ink-500">Loading…</p>
+      </Sheet>
     );
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-ink-100" style={{ fontSize: "var(--t-display)" }}>
+        <h1 className="text-ink-900" style={{ fontSize: "var(--b-heading)" }}>
           How these models work, and where they fail
         </h1>
-        <p className="font-prose mt-3 text-ink-300" style={{ maxWidth: "62ch" }}>
+        <p className="mt-3 text-ink-500" style={{ maxWidth: "62ch" }}>
           {ABOUT.intro}
         </p>
       </div>
 
       {meta.tools.map((tool) => (
-        <Panel key={tool.id}>
+        <Sheet key={tool.id}>
           <div
             className="mb-4 flex flex-wrap items-baseline justify-between gap-3 pb-3"
-            style={{ borderBottom: `2px solid ${TOOL_ACCENT[tool.id]}` }}
+            style={{ borderBottom: "2px solid var(--ink-900)" }}
           >
             <div>
-              <h2 className="text-ink-100" style={{ fontSize: "var(--t-value)" }}>
+              <h2 className="text-ink-900" style={{ fontSize: "var(--t-value)" }}>
                 {tool.name}
               </h2>
               <div
-                className="font-mono text-ink-400"
+                className="font-mono text-ink-300"
                 style={{ fontSize: "var(--t-micro)" }}
               >
                 {tool.technique}
@@ -239,10 +233,10 @@ export function About() {
             </div>
             <Link
               to={TOOL_ROUTE[tool.id] ?? "/"}
-              className="font-mono rounded px-3 py-1.5 text-ink-200"
+              className="font-mono rounded px-3 py-1.5 text-ink-700"
               style={{
                 fontSize: "var(--t-micro)",
-                border: "1px solid var(--ink-700)",
+                border: "var(--rule-w) solid var(--rule-200)",
               }}
             >
               open the tool →
@@ -255,14 +249,11 @@ export function About() {
               of the headline a reader is most likely to skip and least able
               to afford skipping (AGENTS.md §4). */}
           <div
-            className="mt-5 rounded p-4"
-            style={{
-              background: "var(--ink-900)",
-              borderLeft: "2px solid var(--state-low)",
-            }}
+            className="mt-5"
+              style={{ borderTop: "var(--rule-w) solid var(--rule-200)", paddingTop: "var(--s-3)" }}
           >
             <div className="label mb-1">What it cannot do</div>
-            <p className="font-prose text-ink-200">{tool.limitation}</p>
+            <p className="text-ink-700">{tool.limitation}</p>
           </div>
 
           {(plots[tool.id] ?? []).length > 0 && (
@@ -278,11 +269,11 @@ export function About() {
               </Disclosure>
             </div>
           )}
-        </Panel>
+        </Sheet>
       ))}
 
-      <Panel title="Licensing">
-        <p className="font-prose text-ink-200">{ABOUT.licenceIntro}</p>
+      <Section title="Licensing">
+        <p className="text-ink-700">{ABOUT.licenceIntro}</p>
         <dl className="mt-4 grid gap-3">
           {[
             ["Code", meta.licensing.code],
@@ -295,7 +286,7 @@ export function About() {
             >
               <dt className="label">{k}</dt>
               <dd
-                className="font-mono m-0 text-ink-200"
+                className="font-mono m-0 text-ink-700"
                 style={{ fontSize: "var(--t-body)" }}
               >
                 {v}
@@ -303,8 +294,8 @@ export function About() {
             </div>
           ))}
         </dl>
-        <p className="font-prose mt-4 text-ink-300">{meta.licensing.note}</p>
-      </Panel>
+        <p className="mt-4 text-ink-500">{meta.licensing.note}</p>
+      </Section>
     </div>
   );
 }

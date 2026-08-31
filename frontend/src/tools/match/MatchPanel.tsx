@@ -12,7 +12,7 @@ import { MATCH } from "../../lib/copy";
 import { DistributionRail } from "../../components/marks/DistributionRail";
 import { Disclosure } from "../../components/ui/Disclosure";
 import { MetricRow } from "../../components/ui/MetricRow";
-import { Panel } from "../../components/ui/Panel";
+import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
 
 function quality(meta: ToolMeta | null) {
@@ -38,11 +38,11 @@ export function MatchPanel({
 
   const header = (
     <div className="mb-6">
-      <h2 className="text-ink-100" style={{ fontSize: "var(--t-value)" }}>
-        {m.home_club} <span className="text-ink-400">v</span> {m.away_club}
+      <h2 className="text-ink-900" style={{ fontSize: "var(--t-value)" }}>
+        {m.home_club} <span className="text-ink-300">v</span> {m.away_club}
       </h2>
       <div
-        className="font-mono text-ink-300"
+        className="font-mono text-ink-500"
         style={{ fontSize: "var(--t-micro)" }}
       >
         {m.date} · season {m.season}
@@ -57,12 +57,12 @@ export function MatchPanel({
   if (data.status === "out_of_scope") {
     const c = data.coverage;
     return (
-      <Panel>
+      <Sheet>
         {header}
         <div className="mb-5">
           <div className="label mb-2">Forecast</div>
           <div
-            className="font-mono text-ink-400"
+            className="font-mono text-ink-300"
             style={{ fontSize: "var(--t-figure)" }}
           >
             — no held-out forecast for this match
@@ -70,8 +70,8 @@ export function MatchPanel({
         </div>
 
         <div className="space-y-3">
-          <StateChip state="null">{MATCH.outOfScopeChip}</StateChip>
-          <p className="font-prose text-ink-200">
+          <StateChip state="absent">{MATCH.outOfScopeChip}</StateChip>
+          <p className="finding">
             {MATCH.outOfScopeReasons[c.reason_key] ??
               "No held-out forecast exists for this match."}
           </p>
@@ -100,7 +100,7 @@ export function MatchPanel({
             ]}
           />
         </div>
-      </Panel>
+      </Sheet>
     );
   }
 
@@ -110,13 +110,13 @@ export function MatchPanel({
   const labels = f.labels;
 
   return (
-    <Panel>
+    <Sheet>
       {header}
 
       <div className="mb-4">
         <div className="label mb-1">Forecast</div>
         <div
-          className="font-mono text-ink-100"
+          className="font-mono text-ink-900"
           style={{ fontSize: "var(--t-value)" }}
         >
           {f.order
@@ -135,13 +135,13 @@ export function MatchPanel({
       />
 
       <div className="mt-5 space-y-3">
-        <StateChip state={correct ? "clear" : "low"}>
+        <StateChip state={correct ? "strong" : "weak"}>
           {correct ? "Top pick correct" : "Top pick wrong"}
         </StateChip>
 
         {/* The finding is the standing caveat, not a verdict on this match.
             One correct forecast is not evidence of skill (DESIGN.md V9). */}
-        <p className="font-prose text-ink-200">
+        <p className="finding">
           {q.drawRecall !== null
             ? MATCH.drawBlindSpot(pct(q.drawRecall))
             : correct
@@ -207,6 +207,6 @@ export function MatchPanel({
           </div>
         </div>
       )}
-    </Panel>
+    </Sheet>
   );
 }

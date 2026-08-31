@@ -48,26 +48,28 @@ export function Combobox({
       <div className="label mb-1">{label}</div>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger
-          className="flex w-full items-center justify-between rounded px-3 py-2 text-left"
+          className="hoverable flex w-full items-center justify-between px-3 py-2 text-left"
           style={{
-            background: "var(--ink-800)",
-            border: "1px solid var(--ink-700)",
-            color: selected ? "var(--ink-100)" : "var(--ink-400)",
+            background: "var(--paper-000)",
+            border: "var(--rule-w) solid var(--rule-200)",
+            borderRadius: "var(--radius)",
+            color: selected ? "var(--ink-900)" : "var(--ink-300)",
             fontSize: "var(--t-body)",
           }}
         >
           <span className="truncate">{selected?.label ?? placeholder}</span>
-          <ChevronsUpDown size={14} aria-hidden className="shrink-0 text-ink-400" />
+          <ChevronsUpDown size={14} strokeWidth={1} aria-hidden className="shrink-0 text-ink-400" />
         </Popover.Trigger>
 
         <Popover.Portal>
           <Popover.Content
             align="start"
             sideOffset={4}
-            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded"
+            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden"
             style={{
-              background: "var(--ink-850)",
-              border: "1px solid var(--ink-700)",
+              background: "var(--paper-000)",
+              borderRadius: "var(--radius)",
+              border: "var(--rule-w) solid var(--rule-200)",
             }}
           >
             <Command
@@ -81,8 +83,8 @@ export function Combobox({
                 placeholder={placeholder}
                 className="w-full bg-transparent px-3 py-2 outline-none"
                 style={{
-                  borderBottom: "1px solid var(--ink-700)",
-                  color: "var(--ink-100)",
+                  borderBottom: "var(--rule-w) solid var(--rule-200)",
+                  color: "var(--ink-900)",
                   fontSize: "var(--t-body)",
                 }}
               />
@@ -112,8 +114,8 @@ export function Combobox({
                         style={{
                           fontSize: "var(--t-micro)",
                           color: o.hintMuted
-                            ? "var(--state-null)"
-                            : "var(--ink-400)",
+                            ? "var(--ink-500)"
+                            : "var(--ink-300)",
                         }}
                       >
                         {o.hint}

@@ -1,13 +1,27 @@
 /**
  * A state marker. Two to four words, never a sentence.
  *
- * DESIGN.md §5: the chip is the one glanceable thing. The sentence beside it
- * carries the single most important qualification; everything else goes behind
- * a disclosure. A chip containing a clause has taken the sentence's job.
+ * The chip is the one glanceable thing. The sentence beside it carries the
+ * single most important qualification; everything else goes behind a
+ * disclosure. A chip containing a clause has taken the sentence's job.
+ *
+ * It is set in ink density like every other confidence signal, not in a hue.
+ * The WORD is what carries the state here -- "Contested" says more, and says
+ * it to a screen reader too, than any colour could. Density reinforces the
+ * word; it does not replace it.
  */
 
 import type { MarkState } from "../marks/Rail";
-import { stateColor } from "../marks/Rail";
+import { signalInk } from "../marks/Rail";
+
+/** Absence gets the trough's rule rather than an ink fill, so a refusal chip
+ *  reads as an empty field rather than as a filled state. */
+const BORDER: Record<MarkState, string> = {
+  strong: "var(--signal-3)",
+  qualified: "var(--signal-2)",
+  weak: "var(--signal-1)",
+  absent: "var(--rule-200)",
+};
 
 export function StateChip({
   state,
@@ -16,16 +30,17 @@ export function StateChip({
   state: MarkState;
   children: React.ReactNode;
 }) {
-  const c = stateColor(state);
+  const ink = state === "absent" ? "var(--ink-500)" : signalInk(state);
   return (
     <span
-      className="inline-block rounded-full font-mono"
+      className="font-mono inline-block"
       style={{
-        color: c,
-        border: `1px solid ${c}`,
-        background: `color-mix(in srgb, ${c} 14%, transparent)`,
+        color: ink,
+        border: `var(--rule-w) solid ${BORDER[state]}`,
+        borderRadius: "var(--radius)",
+        background: "var(--paper-000)",
         fontSize: "var(--t-label)",
-        padding: "3px 10px",
+        padding: "3px 9px",
         letterSpacing: "0.04em",
       }}
     >

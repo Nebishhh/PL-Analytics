@@ -446,6 +446,33 @@ Manual checks that no grep will catch:
 
 ---
 
+### 7.3 Write down what you rejected, when you reject it
+
+**A significant rejected alternative must be recorded in DESIGN.md or AGENTS.md at
+the moment it is rejected**, with its reasoning — not left in a conversation to be
+re-derived later.
+
+This was learned the expensive way. Sonner and Vaul were both evaluated and
+rejected during the first frontend build. When the redesign reached the same
+question, the repository held **no trace of either decision** — not a document,
+not a commit message, not a comment. `git log -S` found nothing. What survived
+was a remembered conclusion with no argument attached, which is worse than
+nothing: it invites an agent to either re-litigate from scratch or, worse, cite a
+verdict it cannot check.
+
+The cost is asymmetric. Writing two sentences at the time is cheap; reconstructing
+why a competent decision was made, months later, is not, and a conclusion without
+its reasoning cannot be revisited intelligently when the conditions change — which
+is exactly what happened here, since one of the two verdicts should have changed
+and the other should have strengthened.
+
+Applies to: a library considered and not adopted, a design direction tested and
+dropped, an approach that failed for a specific reason, and any "we decided not
+to" that a later reader might otherwise mistake for an oversight. A rejected
+alternative with its reasoning is a **decision**; without it, it is a rumour.
+
+---
+
 ## 8. When a rule blocks something genuinely better
 
 These rules encode measured findings, not taste — but they are not sacred.

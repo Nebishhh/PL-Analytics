@@ -20,7 +20,8 @@ import {
   type ToolMeta,
 } from "../../lib/api";
 import { Combobox, type ComboOption } from "../../components/ui/Combobox";
-import { Panel } from "../../components/ui/Panel";
+import { Select } from "../../components/ui/Select";
+import { Notice, Sheet, Well } from "../../components/ui/Sheet";
 import { MatchPanel } from "./MatchPanel";
 
 const ALL = "__all__";
@@ -89,11 +90,11 @@ export function MatchTool() {
 
   if (error) {
     return (
-      <Panel title="Backend unavailable">
-        <p className="font-prose text-ink-200">
+      <Notice title="Backend unavailable">
+        <p className="text-ink-700">
           {error}. The API should be running on 127.0.0.1:8000.
         </p>
-      </Panel>
+      </Notice>
     );
   }
 
@@ -102,65 +103,40 @@ export function MatchTool() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-ink-100" style={{ fontSize: "var(--t-display)" }}>
+        <h1 className="text-ink-900" style={{ fontSize: "var(--t-title)", lineHeight: 1.2, fontWeight: 600 }}>
           Match forecast
         </h1>
-        <p className="font-prose mt-2 text-ink-300">
+        <p className="mt-2 text-ink-500">
           Win, draw or loss for a Premier League fixture — forecast by a model
           that had never seen that season.
         </p>
       </div>
 
-      <Panel>
+      <Well>
         <div className="grid gap-4 md:grid-cols-[1fr_1.4fr_2.6fr]">
-          <div>
-            <div className="label mb-1">Season</div>
-            <select
-              value={season ?? ""}
-              onChange={(e) => {
-                setSeason(Number(e.target.value));
+            <Select
+              label="Season"
+              value={season === null ? "" : String(season)}
+              onChange={(v) => {
+                setSeason(Number(v));
                 navigate("/match");
               }}
-              className="w-full rounded px-3 py-2"
-              style={{
-                background: "var(--ink-800)",
-                border: "1px solid var(--ink-700)",
-                color: "var(--ink-100)",
-                fontSize: "var(--t-body)",
-              }}
-            >
-              {seasons.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+              options={seasons.map((x) => ({ id: String(x), label: String(x) }))}
+            />
 
-          <div>
-            <div className="label mb-1">Club</div>
-            <select
+            <Combobox
+              label="Club"
+              options={[
+                { id: ALL, label: "All clubs" },
+                ...clubs.map((c) => ({ id: c, label: c })),
+              ]}
               value={club}
-              onChange={(e) => {
-                setClub(e.target.value);
+              onChange={(v) => {
+                setClub(v);
                 navigate("/match");
               }}
-              className="w-full rounded px-3 py-2"
-              style={{
-                background: "var(--ink-800)",
-                border: "1px solid var(--ink-700)",
-                color: "var(--ink-100)",
-                fontSize: "var(--t-body)",
-              }}
-            >
-              <option value={ALL}>All clubs</option>
-              {clubs.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+              placeholder="All clubs"
+            />
 
           <Combobox
             label="Match"
@@ -170,13 +146,13 @@ export function MatchTool() {
             placeholder={`Search ${matches.length} match${matches.length === 1 ? "" : "es"}…`}
           />
         </div>
-      </Panel>
+      </Well>
 
       {result ? (
         <MatchPanel data={result} meta={meta} />
       ) : (
-        <Panel>
-          <p className="font-prose text-ink-300">
+        <Sheet>
+          <p className="text-ink-500">
             {gameId
               ? "Loading…"
               : `Pick a match to see the forecast. ${
@@ -193,7 +169,7 @@ export function MatchTool() {
                     : "…"
                 } are not listed because they have no earlier seasons to train on.`}
           </p>
-        </Panel>
+        </Sheet>
       )}
     </div>
   );

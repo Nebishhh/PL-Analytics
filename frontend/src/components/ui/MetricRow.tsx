@@ -10,13 +10,13 @@ export function MetricRow({
         <div key={m.label}>
           <div className="label">{m.label}</div>
           <div
-            className="font-mono text-ink-100"
+            className="font-mono text-ink-900"
             style={{ fontSize: "var(--t-figure)" }}
           >
             {m.value}
           </div>
           {m.sub && (
-            <div className="font-mono text-ink-400" style={{ fontSize: "var(--t-micro)" }}>
+            <div className="font-mono text-ink-300" style={{ fontSize: "var(--t-micro)" }}>
               {m.sub}
             </div>
           )}

@@ -1,43 +1,48 @@
 @import "tailwindcss";
-@import "./tokens.css";
 
-/* Self-hosted; no Google Fonts request, no layout shift. */
-@import "@fontsource/ibm-plex-sans/400.css";
-@import "@fontsource/ibm-plex-sans/600.css";
+/* Fraunces carries both the 92px display and the 18px finding, which is only
+   honest because of its optical-size axis: it flattens contrast and widens
+   toward text sizes. Measured, not assumed -- its `o` is 21% wider at opsz 9
+   than at opsz 144 (DESIGN.md §3). */
+@import "@fontsource-variable/fraunces/opsz.css";
+@import "@fontsource-variable/archivo/wght.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/600.css";
-/* Variable cut, for the optical-size axis. Newsreader flattens its stroke
-   contrast at small opsz, which is what keeps the hairlines from going
-   fragile in light-on-dark prose at 16px. */
-@import "@fontsource-variable/newsreader/opsz.css";
 
-/* Only two weights exist in this system, 400 and 600. An instrument panel
- * needs contrast between label and value, which the type scale already
- * provides; a weight ramp adds noise without adding information. */
+@import "./tokens.css";
 
-/* min-height, not height. With `height: 100%` the #root box stops at the
- * viewport while its content overflows, so the sticky top bar sticks to the
- * bottom of that 576px box and strands itself mid-page. min-height lets #root
- * grow with the content, which puts sticky back on the document scroll. */
+/* --------------------------------------------------------------------------
+   Ground
+   -------------------------------------------------------------------------- */
+
 html,
-body,
+body {
+  height: 100%;
+}
+
+/* min-height, not height: a fixed height pins the page to the viewport and
+   strands a sticky header mid-document once content exceeds it. */
 #root {
   min-height: 100%;
 }
 
 body {
-  margin: 0;
-  background: var(--ink-900);
-  color: var(--ink-200);
+  background: var(--paper-100);
+  color: var(--ink-900);
   font-family: var(--font-ui);
   font-size: var(--t-body);
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* DESIGN.md V7. Every figure in this app aligns down a column, which is the
- * difference between a comparison you can scan and one you have to read
- * twice. Applied to the mono face globally rather than per component so it
- * cannot be forgotten. */
+/* --------------------------------------------------------------------------
+   The three registers
+   -------------------------------------------------------------------------- */
+
+/* Every figure in this app aligns down a column, which is the difference
+   between a comparison you can scan and one you read twice. Applied to the
+   face globally rather than per component so it cannot be forgotten (V7). */
 .font-mono,
 code,
 kbd,
@@ -47,79 +52,111 @@ pre {
   font-variant-numeric: tabular-nums;
 }
 
-.font-prose {
-  font-family: var(--font-prose);
-  font-size: var(--t-prose);
-  line-height: 1.6;
-  /* Let the face pick its optical size from the rendered size. At 16px this
-     pulls contrast down; the display cut would put 5:1 hairlines into body
-     prose on a dark ground. */
+/* The serif is reserved. It carries the display voice and the one-sentence
+   finding beside a mark, and nothing else -- that reservation is what lets a
+   reader tell an assertion about the model from a label. */
+.font-display {
+  font-family: var(--font-display);
   font-optical-sizing: auto;
+  font-variation-settings: "WONK" 0;
 }
 
-/* Labels read as labels, not body text. */
+.finding {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: "WONK" 0;
+  font-size: var(--t-finding);
+  line-height: 1.5;
+  color: var(--ink-900);
+  max-width: 58ch;
+  text-wrap: pretty;
+}
+
 .label {
+  font-family: var(--font-ui);
   font-size: var(--t-label);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--ink-300);
+  color: var(--ink-500);
 }
 
-/* Nothing in this system animates to convey meaning, so removing motion
- * removes nothing (DESIGN.md §10). */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* --------------------------------------------------------------------------
+   Rules and structure
+   -------------------------------------------------------------------------- */
+
+/* A hairline, the way a printed rule is a hairline. Never 2px, and never
+   coloured on a callout edge (V12). */
+.rule {
+  border: 0;
+  border-top: var(--rule-w) solid var(--rule-200);
 }
 
-:focus-visible {
-  outline: 2px solid var(--state-clear);
+/* --------------------------------------------------------------------------
+   Browser surfaces the design system would otherwise leave to the browser
+   -------------------------------------------------------------------------- */
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink-900);
+}
+
+:where(a, button, select, input, [role="combobox"], [role="button"]):focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
-/* ---------------------------------------------------------------------------
-   High-craft layer (Step 7). Chrome only -- no rule below touches a data mark.
-   --------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Motion. Chrome only -- no rule here touches a mark's geometry (§3.4).
+   -------------------------------------------------------------------------- */
 
-/* The one-sentence finding beside each mark. DESIGN.md §2 reserves the serif
-   for exactly this, but reserving the FACE was not enough on its own: at
-   --t-prose in --ink-200 a finding sat at the same visual weight as the label
-   above it, so the project's actual claims read as captions. Size and colour
-   do the work here; V10 permits no third weight. */
-.finding {
-  font-family: var(--font-prose);
-  font-size: var(--t-finding);
-  line-height: 1.5;
-  color: var(--ink-100);
-  font-optical-sizing: auto;
-  text-wrap: pretty;
-  max-width: 60ch;
-}
-
-/* Panel content on selection. Opacity and a few pixels of travel on the
-   CONTAINER -- never on a rail's width or a needle's position. */
 @keyframes panel-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .panel-in {
   animation: panel-in var(--dur) var(--ease-out) both;
 }
 
-/* Radix Collapsible, which publishes the measured height as a custom property
-   so the expand can be animated without measuring it here. */
+@keyframes route-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.route-in {
+  animation: route-in var(--dur) var(--ease-out) both;
+}
+
+/* Height comes from Radix's measured value rather than a guessed max-height,
+   so a long caveat opens at the same speed as a short one and never clips. */
 @keyframes disclosure-down {
-  from { height: 0; opacity: 0; }
-  to   { height: var(--radix-collapsible-content-height); opacity: 1; }
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
 }
 @keyframes disclosure-up {
-  from { height: var(--radix-collapsible-content-height); opacity: 1; }
-  to   { height: 0; opacity: 0; }
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
 }
 [data-state="open"].disclosure-content {
   animation: disclosure-down var(--dur) var(--ease-out);
@@ -128,8 +165,6 @@ pre {
   animation: disclosure-up var(--dur-fast) var(--ease-out);
 }
 
-/* Interactive chrome. Hover and focus are the two states this system had no
-   opinion about, which read as unfinished rather than restrained. */
 .hoverable {
   transition:
     background-color var(--dur-fast) var(--ease-out),
@@ -137,26 +172,17 @@ pre {
     color var(--dur-fast) var(--ease-out);
 }
 .hoverable:hover {
-  border-color: var(--ink-600);
-  background: var(--ink-800);
+  border-color: var(--ink-300);
+  background: var(--paper-000);
 }
 
-/* One focus ring, in the active tool's accent. Wayfinding colour doing
-   wayfinding work: it says which tool you are in while you are keyboarding
-   through it. Never applied inside a mark (V1). */
-:where(a, button, select, input, [role="combobox"]):focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-
-/* Route change. A short cross-fade so switching tools does not feel like a
-   page reload; no travel, because the two pages are peers rather than a
-   sequence. */
-@keyframes route-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.route-in {
-  animation: route-in var(--dur) var(--ease-out) both;
+/* Nothing above carries meaning, so removing it removes nothing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -15,7 +15,7 @@
  *   onto the semantic scale so the client picks no colours either.
  */
 
-import { Needle, Rail, stateColor, type MarkState } from "./Rail";
+import { Needle, Rail, signalInk, type MarkState } from "./Rail";
 import { num } from "../../lib/format";
 
 export interface AxisZone {
@@ -64,22 +64,24 @@ export function ZonedAxis({ min, max, value, zones, tier }: Props) {
             style={{
               left: `${pos(z.from) * 100}%`,
               width: `${(pos(z.to) - pos(z.from)) * 100}%`,
-              background: stateColor(z.state),
+              background: signalInk(z.state),
               // Zones are context, not the reading. Kept faint so the needle
-              // is what the eye lands on.
-              opacity: 0.14,
-              borderRight: "1px solid var(--ink-700)",
+              // is what the eye lands on. Density and position agree here --
+              // the axis is ordered left to right -- so the two channels
+              // reinforce rather than compete (DESIGN.md §1).
+              opacity: 0.16,
+              borderRight: "var(--rule-w) solid var(--rule-200)",
             }}
           />
         ))}
         <Needle
           at={pos(value)}
-          state={zones.find((z) => value >= z.from && value <= z.to)?.state ?? "null"}
+          state={zones.find((z) => value >= z.from && value <= z.to)?.state ?? "absent"}
         />
       </Rail>
 
       <div
-        className="mt-1 font-mono text-ink-300"
+        className="mt-1 font-mono text-ink-500"
         style={{ fontSize: "var(--t-micro)" }}
       >
         separation {num(value, 3)}

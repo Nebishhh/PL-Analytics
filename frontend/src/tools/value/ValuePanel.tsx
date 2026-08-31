@@ -17,7 +17,7 @@ import { BandRail } from "../../components/marks/BandRail";
 import { CalibrationRail } from "../../components/marks/CalibrationRail";
 import { Disclosure } from "../../components/ui/Disclosure";
 import { MetricRow } from "../../components/ui/MetricRow";
-import { Panel } from "../../components/ui/Panel";
+import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
 
 /** `inputs` is an open record in the OpenAPI schema, so indexing it yields
@@ -45,10 +45,10 @@ export function ValuePanel({
 
   const header = (
     <div className="mb-6">
-      <h2 className="text-ink-100" style={{ fontSize: "var(--t-value)" }}>
+      <h2 className="text-ink-900" style={{ fontSize: "var(--t-value)" }}>
         {p.name}
       </h2>
-      <div className="font-mono text-ink-300" style={{ fontSize: "var(--t-micro)" }}>
+      <div className="font-mono text-ink-500" style={{ fontSize: "var(--t-micro)" }}>
         {p.club} · {p.position}
         {p.sub_position ? ` (${p.sub_position})` : ""} · {num(p.age, 1)} yrs ·{" "}
         {p.pl_minutes.toLocaleString()} PL min
@@ -63,12 +63,12 @@ export function ValuePanel({
   if (data.status === "not_calibrated") {
     const c = data.calibration;
     return (
-      <Panel tone="result" animate>
+      <Sheet animate>
         {header}
         <div className="mb-5">
           <div className="label mb-2">Estimate</div>
-          <div className="font-mono text-ink-400" style={{ fontSize: "var(--t-figure)" }}>
-            — not calibrated for this player
+          <div className="font-mono text-ink-300" style={{ fontSize: "var(--t-figure)" }}>
+            —
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export function ValuePanel({
         />
 
         <div className="mt-5 space-y-3">
-          <StateChip state="null">{VALUE.refusalChip}</StateChip>
+          <StateChip state="absent">{VALUE.refusalChip}</StateChip>
           <p className="finding">
             {VALUE.refusalFinding(c.minimum)}
           </p>
@@ -94,7 +94,7 @@ export function ValuePanel({
             ))}
           </Disclosure>
         </div>
-      </Panel>
+      </Sheet>
     );
   }
 
@@ -103,12 +103,12 @@ export function ValuePanel({
   const inside = data.actual.inside_band === true;
 
   return (
-    <Panel tone="result" animate>
+    <Sheet animate>
       {header}
 
       <div className="mb-4">
         <div className="label mb-1">Estimate</div>
-        <div className="font-mono text-ink-100" style={{ fontSize: "var(--t-value)" }}>
+        <div className="font-mono text-ink-900" style={{ fontSize: "var(--t-value)" }}>
           {eur(e.low_eur)} – {eur(e.high_eur)}
         </div>
       </div>
@@ -122,7 +122,7 @@ export function ValuePanel({
       />
 
       <div className="mt-5 space-y-3">
-        <StateChip state={inside ? "clear" : "low"}>
+        <StateChip state={inside ? "strong" : "weak"}>
           {inside ? "Actual inside band" : "Actual outside band"}
         </StateChip>
 
@@ -174,6 +174,6 @@ export function ValuePanel({
           />
         </div>
       </div>
-    </Panel>
+    </Sheet>
   );
 }

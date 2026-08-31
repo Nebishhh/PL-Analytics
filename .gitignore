@@ -52,3 +52,11 @@ Thumbs.db
 
 # local tooling config
 .claude/
+
+# Impeccable installs its skill payload into whichever agent harnesses it
+# detects. .claude/ was already ignored; these are the same vendored files for
+# other harnesses and are tooling, not this project's source -- 74k lines of
+# them, which nearly went into a commit.
+.agents/
+.codex/
+.impeccable/

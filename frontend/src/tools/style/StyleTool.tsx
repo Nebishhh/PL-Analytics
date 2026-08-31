@@ -22,8 +22,9 @@ import {
 import { num } from "../../lib/format";
 import { STYLE } from "../../lib/copy";
 import { Combobox, type ComboOption } from "../../components/ui/Combobox";
+import { Select } from "../../components/ui/Select";
 import { Disclosure } from "../../components/ui/Disclosure";
-import { Panel } from "../../components/ui/Panel";
+import { Notice, Sheet, Well } from "../../components/ui/Sheet";
 import { StylePanel } from "./StylePanel";
 
 const ALL = "__all__";
@@ -75,21 +76,21 @@ export function StyleTool() {
 
   if (error) {
     return (
-      <Panel title="Backend unavailable">
-        <p className="font-prose text-ink-200">
+      <Notice title="Backend unavailable">
+        <p className="text-ink-700">
           {error}. The API should be running on 127.0.0.1:8000.
         </p>
-      </Panel>
+      </Notice>
     );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-ink-100" style={{ fontSize: "var(--t-display)" }}>
+        <h1 className="text-ink-900" style={{ fontSize: "var(--t-title)", lineHeight: 1.2, fontWeight: 600 }}>
           Activity profile
         </h1>
-        <p className="font-prose mt-2 text-ink-300">
+        <p className="mt-2 text-ink-500">
           Which activity cluster a player was grouped into — and how solid that
           grouping is. Activity profiles, not playing styles: this data has no
           passing, carrying or expected-goals columns.
@@ -99,9 +100,9 @@ export function StyleTool() {
       {/* The two-tier trust finding, stated once at the top rather than per
           player, because it qualifies every answer the tool can give. */}
       {silhouette !== null && (
-        <Panel>
-          <p className="font-prose text-ink-200">
-            <strong className="text-ink-100">
+        <Sheet>
+          <p className="text-ink-700">
+            <strong className="text-ink-900">
               This clustering is most confident where it is least informative.
             </strong>
           </p>
@@ -118,35 +119,23 @@ export function StyleTool() {
               <p className="mt-3">{STYLE.weakStructure(num(silhouette, 3))}</p>
             </Disclosure>
           </div>
-        </Panel>
+        </Sheet>
       )}
 
-      <Panel>
+      <Well>
         <div className="grid gap-4 md:grid-cols-[1fr_3fr]">
-          <div>
-            <div className="label mb-1">Position</div>
-            <select
-              value={position}
-              onChange={(e) => {
-                setPosition(e.target.value);
-                navigate("/style");
-              }}
-              className="w-full rounded px-3 py-2"
-              style={{
-                background: "var(--ink-800)",
-                border: "1px solid var(--ink-700)",
-                color: "var(--ink-100)",
-                fontSize: "var(--t-body)",
-              }}
-            >
-              <option value={ALL}>All positions</option>
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Position"
+            value={position}
+            onChange={(v) => {
+              setPosition(v);
+              navigate("/style");
+            }}
+            options={[
+              { id: ALL, label: "All positions" },
+              ...POSITIONS.map((p) => ({ id: p, label: p })),
+            ]}
+          />
 
           <Combobox
             label="Player"
@@ -160,13 +149,13 @@ export function StyleTool() {
             }
           />
         </div>
-      </Panel>
+      </Well>
 
       {result ? (
         <StylePanel data={result} meta={meta} />
       ) : (
-        <Panel>
-          <p className="font-prose text-ink-300">
+        <Sheet>
+          <p className="text-ink-500">
             {slug
               ? "Loading…"
               : /* No minutes figure here on purpose. Project 03's artefact does
@@ -179,7 +168,7 @@ export function StyleTool() {
                   players?.length ?? "…"
                 } outfielders are here — goalkeepers are excluded, since their statistical profile shares almost nothing with outfield players.`}
           </p>
-        </Panel>
+        </Sheet>
       )}
     </div>
   );

@@ -8,7 +8,7 @@
  * arithmetic (API.md §5).
  */
 
-import { Band, Dot, Needle, Rail } from "./Rail";
+import { Band, Observed, Needle, Rail } from "./Rail";
 import { eur, logPosition } from "../../lib/format";
 
 interface Props {
@@ -29,7 +29,7 @@ export function BandRail({ point, low, high, actual, insideBand }: Props) {
   // The verdict. Inside is not "good" and outside is not "an error" -- both
   // are honest readings -- but outside is the one that qualifies the number,
   // so it carries the attention-getting state.
-  const state = insideBand ? "clear" : "low";
+  const state = insideBand ? "strong" : "weak";
 
   const decades: { at: number; label: string }[] = [];
   for (let e = Math.ceil(Math.log10(min)); e <= Math.floor(Math.log10(max)); e++) {
@@ -48,7 +48,7 @@ export function BandRail({ point, low, high, actual, insideBand }: Props) {
       >
         <Band from={pos(low)} to={pos(high)} state={state} />
         <Needle at={pos(point)} state={state} />
-        <Dot at={pos(actual)} state="null" />
+        <Observed at={pos(actual)} />
       </Rail>
 
       <div className="mt-2 flex justify-between font-mono text-ink-300"

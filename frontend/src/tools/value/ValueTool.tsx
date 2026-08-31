@@ -1,18 +1,28 @@
 /**
- * Project 01, wired to the real backend.
+ * Project 01. Blueprint density (Operate).
  *
- * Ports the Streamlit app's controls exactly (AGENTS.md §5): optional Club and
- * Position filters defaulting to "All", then a searchable player picker.
+ * Ports the Streamlit app's controls exactly: optional Club and Position
+ * filters defaulting to "All", then a searchable player picker.
  *
- * Sub-threshold players stay in the list and are marked, never hidden. They
- * are there precisely so the refusal can be shown -- removing them would hide
- * the limitation rather than communicate it.
+ * Sub-threshold players stay in the list and are marked, never hidden. They are
+ * there precisely so the refusal can be shown -- removing them would hide the
+ * limitation rather than communicate it.
+ *
+ * Club is a Combobox rather than a Select, decided in Step 5: 30-plus options
+ * is past the point where scanning beats searching, and Select is left to the
+ * genuinely short lists.
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { api, type ToolMeta, type ValueEstimate, type ValuePlayerListItem } from "../../lib/api";
+import {
+  api,
+  type ToolMeta,
+  type ValueEstimate,
+  type ValuePlayerListItem,
+} from "../../lib/api";
 import { Combobox, type ComboOption } from "../../components/ui/Combobox";
-import { Panel } from "../../components/ui/Panel";
+import { Select } from "../../components/ui/Select";
+import { Notice, Section, Well } from "../../components/ui/Sheet";
 import { ValuePanel } from "./ValuePanel";
 
 const ALL = "__all__";
@@ -69,6 +79,11 @@ export function ValueTool() {
     hintMuted: true,
   }));
 
+  const clubOptions: ComboOption[] = [
+    { id: ALL, label: "All clubs" },
+    ...clubs.map((c) => ({ id: c, label: c })),
+  ];
+
   const bandCoverage =
     meta && typeof meta.quality === "object" && meta.quality !== null
       ? ((meta.quality as Record<string, unknown>).band_coverage as
@@ -78,38 +93,50 @@ export function ValueTool() {
 
   if (error) {
     return (
-      <Panel title="Backend unavailable">
-        <p className="font-prose text-ink-200">
+      <Notice title="Backend unavailable">
+        <p style={{ maxWidth: "58ch" }}>
           {error}. The API should be running on 127.0.0.1:8000.
         </p>
-      </Panel>
+      </Notice>
     );
   }
 
   return (
     <div>
-      {/* Three bands of space, not one even stack: title, then the controls a
-          reader operates, then the result. The gap before the result is the
-          widest on the page, because that is the boundary that matters. */}
-      <header className="mb-8">
-        <h1 className="text-ink-100" style={{ fontSize: "var(--t-display)" }}>
+      <header style={{ marginBottom: "var(--s-6)" }}>
+        <h1
+          style={{
+            fontSize: "var(--t-title)",
+            lineHeight: 1.2,
+            margin: 0,
+            fontWeight: 600,
+          }}
+        >
           Market value estimate
         </h1>
-        <p className="font-prose mt-3 text-ink-300" style={{ maxWidth: "58ch" }}>
+        <p
+          style={{
+            marginTop: "var(--s-2)",
+            color: "var(--ink-700)",
+            maxWidth: "58ch",
+            lineHeight: 1.55,
+          }}
+        >
           What a Premier League player is worth, from his career-to-date league
           record — and how much of that estimate to trust.
         </p>
       </header>
 
-      <Panel tone="recessed">
-        <div className="grid gap-4 md:grid-cols-[1fr_1fr_2fr]">
-          <SimpleSelect
+      <Well>
+        <div className="grid gap-4 md:grid-cols-[2fr_1fr_2fr]">
+          <Combobox
             label="Club"
+            options={clubOptions}
             value={club}
-            onChange={setClub}
-            options={[{ id: ALL, label: "All clubs" }, ...clubs.map((c) => ({ id: c, label: c }))]}
+            onChange={(id) => setClub(id)}
+            placeholder="All clubs"
           />
-          <SimpleSelect
+          <Select
             label="Position"
             value={position}
             onChange={setPosition}
@@ -130,57 +157,21 @@ export function ValueTool() {
             }
           />
         </div>
-      </Panel>
+      </Well>
 
-      <div className="mt-8">
-      {result ? (
-        <ValuePanel data={result} bandCoverage={bandCoverage} />
-      ) : (
-        <Panel tone="recessed">
-          <p className="font-prose text-ink-300">
-            {selected === null
-              ? `Pick a player to see an estimate. ${players?.length ?? "…"} Premier League players are available — including those the model declines to price, which are marked in the list.`
-              : "Loading…"}
-          </p>
-        </Panel>
-      )}
+      <div style={{ marginTop: "var(--s-7)" }}>
+        {result ? (
+          <ValuePanel data={result} bandCoverage={bandCoverage} />
+        ) : (
+          <Section ruled>
+            <p style={{ color: "var(--ink-500)", maxWidth: "60ch" }}>
+              {selected === null
+                ? `Pick a player to see an estimate. ${players?.length ?? "…"} Premier League players are available — including those the model declines to price, which are marked in the list.`
+                : "Loading…"}
+            </p>
+          </Section>
+        )}
       </div>
-    </div>
-  );
-}
-
-/** Short lists only. Under ~40 options there is nothing to search. */
-function SimpleSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { id: string; label: string }[];
-}) {
-  return (
-    <div>
-      <div className="label mb-1">{label}</div>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="hoverable w-full rounded px-3 py-2"
-        style={{
-          background: "var(--ink-800)",
-          border: "1px solid var(--ink-700)",
-          color: "var(--ink-100)",
-          fontSize: "var(--t-body)",
-        }}
-      >
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }
