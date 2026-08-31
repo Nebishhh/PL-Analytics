@@ -81,6 +81,22 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) {
     super(message);
   }
+
+  /** A resource that does not exist, as distinct from a backend that is not
+   *  answering. Every tool addresses its reading by id now, so a bookmark or a
+   *  hand-typed URL can name something real-looking that is not there, and
+   *  telling that reader the server is down would be false. */
+  get isNotFound(): boolean {
+    return this.status === 404;
+  }
+}
+
+/** Split a caught error into the two states a tool can honestly report. */
+export function classifyError(e: unknown): { notFound: boolean; message: string } {
+  if (e instanceof ApiError) {
+    return { notFound: e.isNotFound, message: e.message };
+  }
+  return { notFound: false, message: String(e) };
 }
 
 async function get<T>(path: string): Promise<T> {

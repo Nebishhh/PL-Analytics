@@ -23,6 +23,10 @@ export default function App() {
           <Routes location={location}>
             <Route path="/" element={<Landing />} />
             <Route path="/value" element={<ValueTool />} />
+            {/* player_id in the path, matching /match/:gameId and
+                /style/:slug. Without it the flagship tool was the only one
+                whose reading could not be linked to. */}
+            <Route path="/value/:playerId" element={<ValueTool />} />
             <Route path="/match" element={<MatchTool />} />
             {/* game_id in the path so a fixture is linkable, and so a bookmarked
                 out-of-scope match renders its explanation rather than 500-ing. */}

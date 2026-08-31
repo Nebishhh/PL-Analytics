@@ -12,9 +12,10 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   api,
+  classifyError,
   type StyleAssignment,
   type StylePlayerListItem,
   type ToolMeta,
@@ -39,6 +40,7 @@ export function StyleTool() {
   const [position, setPosition] = useState(ALL);
   const [result, setResult] = useState<StyleAssignment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     api.style.meta().then(setMeta).catch((e) => setError(String(e)));
@@ -57,7 +59,9 @@ export function StyleTool() {
       return;
     }
     setResult(null);
-    api.style.assignment(slug).then(setResult).catch((e) => setError(String(e)));
+    api.style.assignment(slug)
+      .then(setResult)
+      .catch((e) => { const c = classifyError(e); if (c.notFound) setMissing(true); else setError(c.message); });
   }, [slug]);
 
   const options: ComboOption[] = useMemo(
@@ -73,6 +77,21 @@ export function StyleTool() {
 
   const q = (meta?.quality ?? {}) as Record<string, unknown>;
   const silhouette = typeof q.silhouette === "number" ? q.silhouette : null;
+
+  if (missing) {
+    return (
+      <Notice title="No such player">
+        <p style={{ maxWidth: "58ch" }}>
+          This URL names a player that is not in the dataset. The backend is
+          answering normally — the identifier just does not resolve.{" "}
+          <Link to="/style" style={{ borderBottom: "var(--rule-w) solid var(--accent)" }}>
+            Start from the picker
+          </Link>
+          .
+        </p>
+      </Notice>
+    );
+  }
 
   if (error) {
     return (

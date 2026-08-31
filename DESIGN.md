@@ -582,6 +582,52 @@ scale in §2 and §3 stays the authority rather than drifting from the code.
 
 ---
 
+## 9c. URL state, and why Nuqs was not adopted
+
+Recorded at the moment of rejection, per AGENTS.md §7.3 — the rule that exists
+because the previous Sonner and Vaul decisions left no trace and had to be made
+twice.
+
+**The question:** should tool state live in URL search params, via Nuqs?
+
+**The audit.** Two of the three tools already addressed their reading by path
+param — `/match/:gameId`, `/style/:slug` — and the third, Value, addressed
+nothing at all. Its player, club and position were component state, so the
+flagship tool, first in the nav and the first link from the landing page, was
+the only one whose reading could not be linked to. That was an inconsistency,
+not a missing library.
+
+**What shipped instead:** `/value/:playerId`, matching the pattern the other two
+already had. No new dependency.
+
+**Why not Nuqs.** It solves URL-syncing of arbitrary component state, and the
+only state here worth sharing is the primary selection — which is a *resource*.
+A player, a match and a cluster assignment are things the API addresses by id,
+and a path is the right expression of a resource; `?player=433177` would be a
+worse spelling of `/value/433177`.
+
+The remaining state is Club, Position and Season. Those are **narrowing aids,
+not resources**: they are how a reader found a player, not what they are looking
+at. Putting them in the URL would produce links like
+`/value?club=Arsenal&position=Attack&player=433177` in which three of four
+parameters are noise, and a shared link would carry a filter the recipient never
+chose. Changing a filter clears the reading in all three tools, which is the
+same decision expressed in behaviour.
+
+**What would reopen it:** a genuinely shareable *view* that is not a single
+reading — a comparison, a saved filter set, a leaderboard. DESIGN.md §9 rules
+out a comparison view in v1, so that need does not exist yet. If it arrives,
+Nuqs is the right answer and this note is the reason it was not adopted sooner.
+
+**One thing making ids addressable did create**, and which had to be fixed here:
+a bookmark can now name a player or slug that does not exist. That returned a
+404 and every tool rendered "Backend unavailable", which is false — the backend
+was answering perfectly. `classifyError` now separates a missing resource from a
+transport failure, and the tools say "No such player" with a route back to the
+picker.
+
+---
+
 ## 10. Open for Step 6 and later
 
 - **Crest treatment.** PRODUCT.md confirms crests are in. How they sit in an

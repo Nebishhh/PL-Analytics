@@ -14,8 +14,10 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   api,
+  classifyError,
   type ToolMeta,
   type ValueEstimate,
   type ValuePlayerListItem,
@@ -28,13 +30,20 @@ import { ValuePanel } from "./ValuePanel";
 const ALL = "__all__";
 
 export function ValueTool() {
+  // The selected player lives in the path, not in component state, so a
+  // reading is linkable and the back button works -- the same contract
+  // /match/:gameId and /style/:slug already had.
+  const { playerId } = useParams();
+  const navigate = useNavigate();
+  const selected = playerId ? Number(playerId) : null;
+
   const [players, setPlayers] = useState<ValuePlayerListItem[] | null>(null);
   const [meta, setMeta] = useState<ToolMeta | null>(null);
   const [club, setClub] = useState(ALL);
   const [position, setPosition] = useState(ALL);
-  const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ValueEstimate | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     Promise.all([api.value.players(), api.value.meta()])
@@ -46,9 +55,14 @@ export function ValueTool() {
   }, []);
 
   useEffect(() => {
-    if (selected === null) return;
+    if (selected === null) {
+      setResult(null);
+      return;
+    }
     setResult(null);
-    api.value.estimate(selected).then(setResult).catch((e) => setError(String(e)));
+    api.value.estimate(selected)
+      .then(setResult)
+      .catch((e) => { const c = classifyError(e); if (c.notFound) setMissing(true); else setError(c.message); });
   }, [selected]);
 
   const clubs = useMemo(
@@ -90,6 +104,21 @@ export function ValueTool() {
           | { out_of_fold: number }
           | undefined)?.out_of_fold ?? null
       : null;
+
+  if (missing) {
+    return (
+      <Notice title="No such player">
+        <p style={{ maxWidth: "58ch" }}>
+          This URL names a player that is not in the dataset. The backend is
+          answering normally — the identifier just does not resolve.{" "}
+          <Link to="/value" style={{ borderBottom: "var(--rule-w) solid var(--accent)" }}>
+            Start from the picker
+          </Link>
+          .
+        </p>
+      </Notice>
+    );
+  }
 
   if (error) {
     return (
@@ -133,13 +162,13 @@ export function ValueTool() {
             label="Club"
             options={clubOptions}
             value={club}
-            onChange={(id) => setClub(id)}
+            onChange={(id) => { setClub(id); navigate("/value"); }}
             placeholder="All clubs"
           />
           <Select
             label="Position"
             value={position}
-            onChange={setPosition}
+            onChange={(v) => { setPosition(v); navigate("/value"); }}
             options={[
               { id: ALL, label: "All positions" },
               ...positions.map((p) => ({ id: p, label: p })),
@@ -149,7 +178,7 @@ export function ValueTool() {
             label="Player"
             options={options}
             value={selected === null ? null : String(selected)}
-            onChange={(id) => setSelected(Number(id))}
+            onChange={(id) => navigate(`/value/${id}`)}
             placeholder={
               players
                 ? `Search ${shortlist.length} player${shortlist.length === 1 ? "" : "s"}…`
