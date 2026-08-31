@@ -12,7 +12,7 @@
 
 import type { ValueEstimate } from "../../lib/api";
 import { eur, num, pct } from "../../lib/format";
-import { VALUE, VALUE_CAVEATS } from "../../lib/copy";
+import { VALUE, valueCaveat } from "../../lib/copy";
 import { BandRail } from "../../components/marks/BandRail";
 import { CalibrationRail } from "../../components/marks/CalibrationRail";
 import { Disclosure } from "../../components/ui/Disclosure";
@@ -131,7 +131,7 @@ export function ValuePanel({
             says why, or what it means. */}
         <p className="finding">
           {data.caveats.length > 0
-            ? VALUE_CAVEATS[data.caveats[0]!.key]
+            ? valueCaveat(data.caveats[0]!)
             : VALUE.defaultFinding(e.error_factor, eur(e.point_eur))}
         </p>
 
@@ -147,7 +147,7 @@ export function ValuePanel({
           {data.caveats.length > 1 &&
             data.caveats.slice(1).map((c) => (
               <p className="mt-3" key={c.key}>
-                {VALUE_CAVEATS[c.key]}
+                {valueCaveat(c)}
               </p>
             ))}
         </Disclosure>

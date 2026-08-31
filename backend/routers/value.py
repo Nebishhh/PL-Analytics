@@ -113,7 +113,8 @@ def estimate(request: Request, player_id: int) -> ValueEstimateResponse:
     thresholds = a.value["caveat_thresholds"]
     caveats: list[Caveat] = []
     if r.age >= thresholds["veteran_age"]:
-        caveats.append(Caveat(key="veteran", detail=f"{r.age:.1f}"))
+        caveats.append(Caveat(key="veteran", detail=f"{r.age:.1f}",
+                              threshold=float(thresholds["veteran_age"])))
     if (r.position in thresholds["blind_spot_positions"]
             and point < actual.market_value_eur / factor):
         caveats.append(Caveat(key="blind_spot", detail=r.position))

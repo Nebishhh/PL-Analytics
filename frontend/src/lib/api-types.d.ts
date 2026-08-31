@@ -317,7 +317,20 @@ export interface components {
              */
             label: string;
         };
-        /** Caveat */
+        /**
+         * Caveat
+         * @description A qualification on a reading, keyed rather than worded.
+         *
+         *     `threshold` carries the artefact value that made the caveat fire, for the
+         *     caveats where one exists. Without it a client can only say a caveat applied,
+         *     not what tripped it -- and the copy filled that gap by inventing a number.
+         *     The veteran caveat's text read "past 40" while `caveat_thresholds.
+         *     veteran_age` is 38, so a 38-year-old was told about a problem starting two
+         *     years after the one that had just been applied to him (AGENTS.md §2.3).
+         *
+         *     `blind_spot` has no numeric threshold: it fires on a position being in a
+         *     list, which `detail` already names.
+         */
         Caveat: {
             /**
              * Key
@@ -326,6 +339,8 @@ export interface components {
             key: "blind_spot" | "veteran";
             /** Detail */
             detail?: string | null;
+            /** Threshold */
+            threshold?: number | null;
         };
         /** ClusterPositionShare */
         ClusterPositionShare: {

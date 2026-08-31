@@ -199,6 +199,25 @@ Real values, William Saliba:
   (DESIGN.md §6), so the verdict must not depend on client float arithmetic.
 - `caveats` is a **list of keys, not prose**. Copy lives in the frontend so it can
   be reviewed as copy. Keys: `blind_spot`, `veteran`.
+- Each caveat carries `detail` (what tripped it — the player's age, or the
+  position) and, where one exists, `threshold` (the artefact value it was tested
+  against). `veteran` sends `threshold` from
+  `caveat_thresholds.veteran_age`; `blind_spot` sends none, because it fires on
+  membership of a position list rather than on a number, and `detail` already
+  names the position.
+
+  **Why `threshold` is sent at all.** Without it a client can say a caveat
+  applied but not what tripped it, and the copy filled the gap by inventing a
+  figure: the veteran sentence read "past 40" while the caveat fires at 38, so a
+  38-year-old was told about a problem starting two years after the one just
+  applied to him. §2.3 says a figure on screen must come from the artefact —
+  this is the field that lets the sentence obey it.
+
+```json
+"caveats": [
+  { "key": "veteran", "detail": "38.3", "threshold": 38.0 }
+]
+```
 
 ### `status: not_calibrated` — Jamie Gittens, 490 minutes
 
