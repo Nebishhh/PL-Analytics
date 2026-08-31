@@ -462,11 +462,110 @@ Carried forward where the old list was right, revised where Step 1 showed it wro
 
 ---
 
-## 9. Open for Step 4 and later
+## 9. Base UI
 
-- **Typefaces.** Three registers are specified; the faces are not. Step 4 chooses
-  against §3's real scale, measuring x-height, cap-height and stroke contrast at
-  true resolution, with no assumption that any current face survives.
+Chosen in Step 5. Every verdict was re-derived against the ink-on-paper system
+rather than carried over — and one had to be, because **the prior Sonner and Vaul
+rejections were not recorded anywhere**: not in a document, not in a commit
+message. An unrecorded decision is one that has to be made again, so both were
+re-argued from scratch. They are recorded here so this does not repeat.
+
+### Kept
+
+**Radix Collapsible** — the disclosure is load-bearing. V4 sends every paragraph
+behind it, so it is the mechanism the caveat rules depend on. It also publishes
+the measured content height, which is what lets the expand animate without a
+guessed `max-height` that clips long caveats.
+
+**Radix Popover** — dismissal, focus return and outside-click for the player
+search. Rebuilding this by hand is how keyboard traps get shipped.
+
+**cmdk** — the 661-player and 330-match searches. Nothing about a change of visual
+world changes the need to search a long list.
+
+### Changed: Radix Select is adopted, having been installed and never used
+
+`@radix-ui/react-select` has been a dependency since the scaffold and is imported
+**nowhere**; four native `<select>` elements are used instead. Shipping an unused
+dependency is its own small failure, so this needed resolving either way.
+
+It is adopted rather than removed. A native `<select>` renders its open list as OS
+chrome, which cannot be typeset — and in a world this committed to a printed
+document, an operating-system dropdown is exactly the undrawn seam the craft floor
+warns about. The closed state can be styled; the open state is where the illusion
+breaks.
+
+With one consequence: **Club (30+ options) becomes a Combobox**, joining Player and
+Match. Select then handles only genuinely short lists — Position (4), Season (9) —
+which is the rule the old `SimpleSelect` comment already stated and did not follow.
+Search for long lists, select for short ones.
+
+### Kept with an adaptation: Lucide
+
+Only two icons are in use — `ChevronsUpDown` and `ChevronRight` — and both are
+genuine affordances rather than decoration. Lucide stays, because the craft floor
+is right that icons should come from a real library at one consistent stroke, not
+from Unicode.
+
+**Set `strokeWidth` to 1.** Lucide's 2px round-capped default is a modern-UI
+signature that fights a hairline paper world; 1px matches `--rule-w` so an icon
+reads as drawn with the same pen as the rules around it.
+
+`lucide-react` is four majors behind (0.469 → 1.37) and should be upgraded in
+Step 6, not silently left.
+
+**Typographic marks are not icons.** The dagger (†) on a footnoted reading, the
+em-dash on a refusal, and the `›` on a disclosure are *typesetting*, set in the
+text face, and they are the correct form precisely because print already has these
+conventions. The craft floor's ban is on a Unicode glyph *standing in for* an icon
+system — a `▶` doing a chevron's job. That is a different thing and remains
+banned.
+
+### Rejected: Sonner
+
+The verdict is unchanged and the reasoning is now stronger, not merely inherited.
+
+A toast is a **time-limited** message. This system's entire argument is that
+uncertainty is stated in place and stays there: confidence is ink density on the
+mark, refusal is an em-dash where the figure would be. §3.4 already forbids a
+caveat living only in a tooltip because hover is invisible to touch and to a
+screen reader; a toast is worse, because it is invisible to *everyone* a few
+seconds later.
+
+The new direction adds a second, independent reason: **paper has no notifications.**
+A transient overlay is a category error in a printed-document world, not merely an
+accessibility problem.
+
+There is also nothing for it to announce. There is no save, no submit, no
+mutation — the entire site is read-only over three artefacts.
+
+*The one thing that would reopen this:* if Step 8's URL-state work introduces a
+copy-link affordance, that action needs feedback and a toast is the conventional
+answer. Reopen it then, on that specific need, and not before.
+
+### Deferred, not rejected: Vaul
+
+This verdict **changes** from the old one. Vaul is a bottom-sheet primitive, and
+the case for it is a real problem this build already has rather than a stylistic
+preference: a `cmdk` list of 661 players inside a popover, at 375px, is the exact
+thing Step 7's mobile QA is meant to test. A bottom sheet is the standard answer
+because it gets full height and protected focus.
+
+It is not adopted now, because adopting a dependency for a problem that has not
+been demonstrated is speculative, and the craft floor's warning against "a modal
+for a task that needs neither interruption nor protected focus" cuts both ways —
+a 661-item search on a phone may well *earn* protected focus.
+
+**The trigger is named so this is decidable rather than re-argued:** if Step 7's
+mobile pass shows the player or match picker unusable at 375px — list clipped,
+keyboard covering results, or scroll trapped — Vaul is adopted for the picker on
+small viewports only, and the desktop popover is untouched. If the picker holds
+up, Vaul stays out and this note records why it was considered.
+
+---
+
+## 10. Open for Step 6 and later
+
 - **Crest treatment.** PRODUCT.md confirms crests are in. How they sit in an
   ink-on-paper world — single-ink, duotone, or full colour as the one licensed
   exception — is a Step 6 decision.
