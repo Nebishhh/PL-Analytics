@@ -36,6 +36,22 @@ Routes that give a consistent set rather than 31 mismatched ones:
   at a fixed threshold and stroke weight. Slowest, most consistent result.
 - **Commission or buy a set** — the only route with unambiguous licensing.
 
+## Making a downloaded badge single-colour
+
+`npm run flatten-crest -- <in.svg> <out.svg>` strips the colours and sets
+`currentColor`, which is the tedious half of preparing a badge. It does not do
+the half that needs drawing judgement — it will not simplify a complex crest,
+redraw it at a consistent weight, or make two differently-traced sources match.
+
+It preserves `fill="none"`, because that is structural: a hollow ring is drawn
+entirely by its stroke, and filling it turns a badge into a blob. For the same
+reason it keeps the stroke on unfilled elements and drops it elsewhere. It
+reports, rather than guesses at, gradients, patterns, filters, embedded raster,
+live `<text>`, opacity, and strokes declared in a `<style>` block.
+
+Run `npm run crests` afterwards — flattening does not guarantee the result
+passes.
+
 Avoid mixing sources. Two crests traced at different weights are more visibly
 wrong here than a monogram is, because they sit at 18px beside the same club
 name on the same rule.

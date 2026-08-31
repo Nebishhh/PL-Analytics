@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "gen:types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/lib/api-types.d.ts",
-    "crests": "node scripts/crests.mjs"
+    "crests": "node scripts/crests.mjs",
+    "flatten-crest": "node scripts/flatten-crest.mjs"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",
