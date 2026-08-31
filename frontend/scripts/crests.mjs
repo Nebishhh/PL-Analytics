@@ -17,7 +17,7 @@
  * anything today.
  */
 
-import { readdirSync, existsSync } from "node:fs";
+import { readdirSync, existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalClub, crestSlug } from "../src/lib/crestSlug.mjs";
@@ -54,6 +54,42 @@ async function clubsFromApi() {
   }
 
   return [...seen].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * What a crest file has to be, per public/crests/MANIFEST.md.
+ *
+ * Checked because these arrive one at a time over days, and a single
+ * full-colour or raster-wrapped badge would be the one chromatic object on an
+ * otherwise ink-on-paper page -- exactly what V1 exists to prevent, and the
+ * kind of thing nobody notices until all 31 are in.
+ *
+ * @param {string} file
+ * @returns {string[]} problems, empty when the file is fine
+ */
+function validate(file) {
+  const bad = [];
+  let svg;
+  try {
+    svg = readFileSync(join(CRESTS_DIR, file), "utf8");
+  } catch {
+    return ["unreadable"];
+  }
+  if (!/<svg[\s>]/i.test(svg)) bad.push("not an SVG");
+  if (!/viewBox\s*=/i.test(svg)) bad.push("no viewBox");
+  if (/<image[\s>]/i.test(svg) || /data:image\/(png|jpe?g|gif)/i.test(svg))
+    bad.push("embedded raster");
+
+  // Distinct explicit colours. currentColor and none do not count.
+  const colours = new Set(
+    [...svg.matchAll(/(?:fill|stroke)\s*[:=]\s*["']?\s*(#[0-9a-f]{3,8}|rgba?\([^)]*\)|[a-z]+)/gi)]
+      .map((m) => m[1].toLowerCase())
+      .filter((c) => c !== "none" && c !== "currentcolor" && c !== "inherit"),
+  );
+  if (colours.size > 1)
+    bad.push(`${colours.size} colours (${[...colours].slice(0, 3).join(", ")})`);
+
+  return bad;
 }
 
 function filesOnDisk() {
@@ -93,6 +129,12 @@ function heuristicKey(club) {
     .replace(/\butd\b/g, "united")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+const problems = new Map();
+for (const f of files) {
+  const bad = validate(f);
+  if (bad.length) problems.set(f, bad);
 }
 
 const rows = clubs.map((club) => {
@@ -137,6 +179,7 @@ if (asJson) {
         missing: [...missingSlugs],
         unmatched,
         collisions: collisions.map((g) => g.map((r) => r.slug)),
+        invalid: Object.fromEntries(problems),
       },
       null,
       2,
@@ -157,6 +200,11 @@ if (asJson) {
     console.log(
       `  ${g[0].have ? "have" : "  — "}  ${canonical.padEnd(pad)}  ${slug}.svg${also}`,
     );
+  }
+  if (problems.size) {
+    console.log(`
+  ${problems.size} file${problems.size === 1 ? " does" : "s do"} not meet MANIFEST.md's requirements:`);
+    for (const [f, bad] of problems) console.log(`        ${f}  —  ${bad.join("; ")}`);
   }
   if (unmatched.length) {
     console.log(`\n  Files matching no club in the dataset (never requested):`);
@@ -181,4 +229,4 @@ if (asJson) {
   );
 }
 
-process.exit(missing.length ? 1 : 0);
+process.exit(missing.length || problems.size ? 1 : 0);
