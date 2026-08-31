@@ -8,8 +8,8 @@ Supersedes [archive/DESIGN-2026-08-30.md](archive/DESIGN-2026-08-30.md).
 credibility, then uses a tool — rather than forcing one treatment across two
 genuinely different jobs.
 
-**Still no implementation code.** Typefaces are deliberately absent: Step 4 chooses
-them against this scale, with no carry-over.
+**Still no implementation code.** Typefaces were chosen in Step 4 and are recorded
+in §3.
 
 ---
 
@@ -163,11 +163,59 @@ as a deliberate omission, not an oversight.
 
 ## 3. Type scale
 
-Roles and sizes only. **Step 4 chooses the faces** against this scale, with no
-carry-over from IBM Plex or Newsreader.
+Three registers: **display serif** for voice, **grotesk** for interface, **mono**
+for every figure.
 
-Three registers, as the archived research established and Step 1 carried forward:
-**display serif** for voice, **grotesk** for interface, **mono** for every figure.
+### The faces, chosen in Step 4 by measurement
+
+```
+--font-display   Fraunces         variable, opsz 9–144, WONK 0
+--font-ui        Archivo          400 / 600
+--font-mono      IBM Plex Mono    400 / 600
+```
+
+All three are **OFL-1.1** and on `@fontsource`. That licence is not a preference:
+the repository is public and its font files are redistributed to anyone who clones
+it, so anything short of OFL would need a redistribution argument this project
+should not have to make.
+
+**Fraunces**, because §3 asks the serif to do two jobs — 92px display *and* the
+18px finding — and its optical-size axis is the only mechanism that serves both
+honestly. Verified the axis actually does something rather than trusting the
+metadata: the `o` measures 175.7 units at `opsz 9` against 145.2 at `opsz 144`, a
+21% widening as it moves to text sizes, with contrast flattening to match. Fixed
+alternatives failed one end or the other. Instrument Serif has the highest
+x-height of the serifs tested (x/cap 0.699) and safe 3.13 contrast, but is a
+single-weight display design; Libre Caslon Display has the lowest x-height (0.623)
+and 7.67 contrast with no optical compensation, so its hairlines are fragile at
+18px.
+
+**Archivo**, for the largest x-height of the grotesks measured (x/cap **0.768**,
+against Geist 0.746 and Public Sans 0.712). That difference is spent entirely on
+the blueprint density's 12px labels and 14px body, which is where a grotesk in
+this system does its actual work. Inter was excluded deliberately: Impeccable's
+craft floor names it among the saturated defaults of AI-generated design, and
+nothing here needed it.
+
+**IBM Plex Mono**, which re-earned its place on a measurement rather than carrying
+over, and for a different reason than it was originally chosen. Every figure on
+this site is a measurement, so a mono's real job is making digits unmistakable.
+Rendering each glyph and diffing the bitmaps:
+
+| Mono | `0` vs `O` | `1` vs `l` | `l` vs `I` | x/cap |
+|---|---|---|---|---|
+| **IBM Plex Mono** | **77.1%** | **96.6%** | 42.7% | 0.743 |
+| JetBrains Mono | 19.7% | 74.6% | **56.3%** | **0.753** |
+| Geist Mono | 32.1% | 40.1% | 30.1% | 0.746 |
+| Space Mono | 9.3% | 31.3% | 19.2% | 0.714 |
+
+Plex Mono separates zero from capital O nearly **four times** better than
+JetBrains and gives up only 1.3% of x-height for it. **Space Mono is
+disqualified**: a 9.3% difference between `0` and `O` is no difference, which is
+disqualifying on a surface where every number is a reading.
+
+Set `font-optical-sizing: auto` on Fraunces and pin `WONK 0`; the axis is what
+makes one face serve both densities.
 
 ### Broadsheet density — landing page
 
