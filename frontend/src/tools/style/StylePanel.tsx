@@ -21,6 +21,7 @@ import { Disclosure } from "../../components/ui/Disclosure";
 import { PlayerSignature } from "../../components/graphics/PlayerSignature";
 import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
+import { Crest } from "../../components/graphics/Crest";
 
 const GROUP_LABEL: Record<string, string> = {
   ATTACKING_OUTPUT: "Attacking output",
@@ -65,9 +66,10 @@ export function StylePanel({
           {String(p.name ?? "")}
         </h2>
         <div
-          className="font-mono text-ink-500"
+          className="font-mono flex items-center gap-2 text-ink-500"
           style={{ fontSize: "var(--t-micro)" }}
         >
+          <Crest club={String(p.club ?? "")} size={18} />
           {String(p.club ?? "")} · {String(p.pos ?? "")} ·{" "}
           {Number(p.age ?? 0).toFixed(0)} yrs ·{" "}
           {Number(p.minutes ?? 0).toLocaleString()} PL min

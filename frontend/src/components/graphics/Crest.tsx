@@ -17,16 +17,21 @@
  */
 
 import { useState } from "react";
-import { crestSlug } from "../../lib/crestSlug.mjs";
+import { canonicalClub, crestSlug } from "../../lib/crestSlug.mjs";
 
 export { crestSlug };
 
 function monogram(club: string): string {
   const skip = new Set(["fc", "afc", "united", "city", "and", "hove", "the"]);
-  const words = club
+  const words = canonicalClub(club)
     .split(/\s+/)
-    .filter((w) => !skip.has(w.toLowerCase().replace(/[^a-z]/gi, "")));
-  const source = words.length ? words : club.split(/\s+/);
+    // A token that is nothing but punctuation is not a word. Without this the
+    // ampersand in "Brighton & Hove Albion" survived as its own token and the
+    // monogram read "B&".
+    .map((w) => ({ raw: w, letters: w.replace(/[^a-z]/gi, "") }))
+    .filter((w) => w.letters.length > 0 && !skip.has(w.letters.toLowerCase()))
+    .map((w) => w.letters);
+  const source = words.length ? words : canonicalClub(club).split(/\s+/);
   return source
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? "")
@@ -54,7 +59,7 @@ export function Crest({ club, size = 22 }: { club: string; size?: number }) {
     <span
       aria-hidden
       className="font-display inline-flex items-center justify-center"
-      title={club}
+      title={canonicalClub(club)}
       style={{
         width: size,
         height: size,

@@ -20,7 +20,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { crestSlug } from "../src/lib/crestSlug.mjs";
+import { canonicalClub, crestSlug } from "../src/lib/crestSlug.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CRESTS_DIR = join(here, "..", "public", "crests");
@@ -78,28 +78,21 @@ try {
 }
 
 /**
- * Names that are probably the same club spelled two ways.
+ * A heuristic guess at "same club, different spelling", used ONLY to catch an
+ * alias the map is missing.
  *
- * Project 01 carries Transfermarkt naming ("Arsenal FC") and project 03 carries
- * FBref naming ("Arsenal"); only 8 of them match exactly. This does NOT merge
- * anything -- the app still asks for one file per name it is handed -- it only
- * reports the collision, because supplying 43 files for 31 clubs is a symptom
- * rather than a task.
+ * With CLUB_ALIASES in place this should never disagree with crestSlug. When it
+ * does, a new name has entered a dataset and needs an entry -- which is exactly
+ * the failure that produced 43 filenames for 31 clubs before the map existed.
  */
-function collisionKey(club) {
-  const explicit = {
-    "manchester utd": "manchester united",
-    wolves: "wolverhampton wanderers",
-    brighton: "brighton and hove albion",
-    spurs: "tottenham hotspur",
-  };
-  const base = club
+function heuristicKey(club) {
+  return club
     .toLowerCase()
     .replace(/&/g, "and")
     .replace(/\b(fc|afc)\b/g, "")
+    .replace(/\butd\b/g, "united")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
-  return explicit[base] ?? base;
 }
 
 const rows = clubs.map((club) => {
@@ -108,6 +101,8 @@ const rows = clubs.map((club) => {
 });
 const have = rows.filter((r) => r.have);
 const missing = rows.filter((r) => !r.have);
+const haveSlugs = new Set(have.map((r) => r.slug));
+const missingSlugs = new Set(missing.map((r) => r.slug));
 
 // A file that matches no club is worth surfacing: it is a typo or a club that
 // left the dataset, and either way it will never be requested.
@@ -116,11 +111,21 @@ const unmatched = [...present].filter((s) => !rows.some((r) => r.slug === s));
 // Group the raw names that look like one club under two spellings.
 const groups = new Map();
 for (const r of rows) {
-  const k = collisionKey(r.club);
-  if (!groups.has(k)) groups.set(k, []);
-  groups.get(k).push(r);
+  if (!groups.has(r.slug)) groups.set(r.slug, []);
+  groups.get(r.slug).push(r);
 }
-const collisions = [...groups.values()].filter((g) => g.length > 1);
+
+// Two raw names the heuristic thinks are one club, that resolved to different
+// slugs anyway -> CLUB_ALIASES is missing an entry.
+const byHeuristic = new Map();
+for (const r of rows) {
+  const k = heuristicKey(r.club);
+  if (!byHeuristic.has(k)) byHeuristic.set(k, new Set());
+  byHeuristic.get(k).add(r.slug);
+}
+const collisions = [...byHeuristic.values()]
+  .filter((slugs) => slugs.size > 1)
+  .map((slugs) => [...slugs].map((slug) => rows.find((r) => r.slug === slug)));
 
 if (asJson) {
   console.log(
@@ -128,8 +133,8 @@ if (asJson) {
       {
         total: rows.length,
         distinctClubs: groups.size,
-        have: have.length,
-        missing: missing.map((r) => r.slug),
+        have: haveSlugs.size,
+        missing: [...missingSlugs],
         unmatched,
         collisions: collisions.map((g) => g.map((r) => r.slug)),
       },
@@ -140,14 +145,17 @@ if (asJson) {
 } else {
   const pad = Math.max(...rows.map((r) => r.club.length));
   console.log(
-    `\n  Crest coverage — ${have.length}/${rows.length} clubs have artwork\n`,
+    `\n  Crest coverage — ${haveSlugs.size}/${groups.size} clubs have artwork  (${rows.length} dataset names)\n`,
   );
   if (!exists) {
     console.log(`  ${CRESTS_DIR} does not exist yet; every club is on the monogram fallback.\n`);
   }
-  for (const r of rows) {
+  for (const [slug, g] of [...groups.entries()].sort()) {
+    const canonical = canonicalClub(g[0].club);
+    const others = g.map((r) => r.club).filter((n) => n !== canonical);
+    const also = others.length ? `  (also: ${others.join(", ")})` : "";
     console.log(
-      `  ${r.have ? "have" : "  — "}  ${r.club.padEnd(pad)}  ${r.slug}.svg`,
+      `  ${g[0].have ? "have" : "  — "}  ${canonical.padEnd(pad)}  ${slug}.svg${also}`,
     );
   }
   if (unmatched.length) {
@@ -157,28 +165,18 @@ if (asJson) {
   if (collisions.length) {
     console.log(
       `
-  ${collisions.length} club${collisions.length === 1 ? "" : "s"} appear under more than one name, so each currently needs a`,
+  MISSING ALIAS — ${collisions.length} club${collisions.length === 1 ? " looks" : "s look"} like one club under two names,`,
     );
-    console.log(
-      `  file per spelling. ${rows.length} names cover ~${groups.size} real clubs:
-`,
-    );
+    console.log(`  but resolved to different files. Add to CLUB_ALIASES:
+`);
     for (const g of collisions) {
-      console.log(`        ${g.map((r) => `${r.slug}.svg`).join("   =   ")}`);
+      console.log(`        ${g.map((r) => `${r.slug}.svg`).join("   vs   ")}`);
     }
-    console.log(
-      `
-  Project 01 carries Transfermarkt naming and project 03 carries FBref
-` +
-        `  naming. Until an alias map exists, the same club also renders a
-` +
-        `  different monogram in Value than in Style.`,
-    );
   }
 
   console.log(
     missing.length
-      ? `\n  ${missing.length} still on the typographic monogram.\n`
+      ? `\n  ${missingSlugs.size} still on the typographic monogram.\n`
       : `\n  Complete — no club is falling back.\n`,
   );
 }

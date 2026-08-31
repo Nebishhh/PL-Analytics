@@ -19,6 +19,7 @@ import { Disclosure } from "../../components/ui/Disclosure";
 import { MetricRow } from "../../components/ui/MetricRow";
 import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
+import { Crest } from "../../components/graphics/Crest";
 
 /** `inputs` is an open record in the OpenAPI schema, so indexing it yields
  *  `number | undefined` under noUncheckedIndexedAccess. Rather than assert the
@@ -48,7 +49,11 @@ export function ValuePanel({
       <h2 className="text-ink-900" style={{ fontSize: "var(--t-value)" }}>
         {p.name}
       </h2>
-      <div className="font-mono text-ink-500" style={{ fontSize: "var(--t-micro)" }}>
+      <div
+        className="font-mono flex items-center gap-2 text-ink-500"
+        style={{ fontSize: "var(--t-micro)" }}
+      >
+        <Crest club={p.club} size={18} />
         {p.club} · {p.position}
         {p.sub_position ? ` (${p.sub_position})` : ""} · {num(p.age, 1)} yrs ·{" "}
         {p.pl_minutes.toLocaleString()} PL min
