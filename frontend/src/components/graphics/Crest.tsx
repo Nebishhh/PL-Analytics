@@ -17,17 +17,9 @@
  */
 
 import { useState } from "react";
+import { crestSlug } from "../../lib/crestSlug.mjs";
 
-/** "Arsenal FC" -> "arsenal-fc". Kept local and simple: this maps a display
- *  name to a filename, not a player to a database row, so it does not need the
- *  backend's transliteration rules. */
-export function crestSlug(club: string): string {
-  return club
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+export { crestSlug };
 
 function monogram(club: string): string {
   const skip = new Set(["fc", "afc", "united", "city", "and", "hove", "the"]);
