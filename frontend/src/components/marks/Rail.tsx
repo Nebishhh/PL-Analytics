@@ -166,7 +166,10 @@ export function Needle({ at, state }: { at: number; state: MarkState }) {
       style={{
         left: `${at * 100}%`,
         width: "2px",
-        marginLeft: "-1px",
+        // Clamped inward by its own width so a needle at the extreme end of an
+        // axis is not half-clipped by the trough. Lewis Hall sits at 0.042 of
+        // a 2.74 axis and was losing a pixel to the border.
+        marginLeft: at < 0.01 ? "0" : at > 0.99 ? "-2px" : "-1px",
         background: signalInk(state),
       }}
     />
@@ -208,7 +211,12 @@ export type Texture = "solid" | "hatched" | "open";
 export function textureStyle(texture: Texture): React.CSSProperties {
   switch (texture) {
     case "solid":
-      return { background: "var(--ink-700)", opacity: 0.85 };
+      // Not element opacity: that composites any text drawn inside the segment
+      // along with the fill, which left the Home percentage at 2.5:1 even
+      // after it was reversed out. The tint goes in the colour instead.
+      return {
+        background: "color-mix(in srgb, var(--ink-700) 88%, var(--paper-100))",
+      };
     case "hatched":
       return {
         backgroundImage:

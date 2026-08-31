@@ -97,7 +97,23 @@ export function DistributionRail({
                 borderRight: "var(--rule-w) solid var(--ink-700)",
               }}
             >
-              {wide ? `${s.key} ${pct(s.p)}` : ""}
+              {wide ? (
+                // Knocked out of the fill rather than set straight onto it.
+                // Over the hatched segment a glyph could land on a stripe --
+                // ink on ink at 1.5:1 -- and over the solid one it needed
+                // reversing anyway. A label on its own ground reads over any
+                // texture, which is how a printed chart handles this.
+                <span
+                  style={{
+                    background: "var(--paper-000)",
+                    padding: "1px 4px",
+                    borderRadius: "var(--radius)",
+                    color: "var(--ink-900)",
+                  }}
+                >
+                  {`${s.key} ${pct(s.p)}`}
+                </span>
+              ) : null}
             </div>
           );
         })}

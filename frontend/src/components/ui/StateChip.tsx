@@ -30,7 +30,12 @@ export function StateChip({
   state: MarkState;
   children: React.ReactNode;
 }) {
-  const ink = state === "absent" ? "var(--ink-500)" : signalInk(state);
+  // The word is always set in readable ink. Density lives on the border.
+  // Colouring the LABEL by confidence put "Contested" at 2.15:1 against the
+  // sheet -- the least readable word on the page was the one warning you not
+  // to trust the reading, which is the exact inversion this system exists to
+  // avoid.
+  const ink = "var(--ink-900)";
   return (
     <span
       className="font-mono inline-block"
@@ -44,6 +49,18 @@ export function StateChip({
         letterSpacing: "0.04em",
       }}
     >
+      {state !== "absent" && (
+        <span
+          aria-hidden
+          className="mr-1.5 inline-block align-middle"
+          style={{
+            width: "7px",
+            height: "7px",
+            background: signalInk(state),
+            border: "var(--rule-w) solid var(--rule-200)",
+          }}
+        />
+      )}
       {children}
     </span>
   );

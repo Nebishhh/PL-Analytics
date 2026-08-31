@@ -37,7 +37,10 @@ export function TopBar() {
       className="sticky top-0 z-40"
       style={{ background: "var(--paper-100)" }}
     >
-      <div className="mx-auto flex max-w-[1100px] items-baseline gap-8 px-6 py-4">
+      {/* Wraps rather than overflowing. At 375px the wordmark plus four links
+          exceeded the viewport and pushed a horizontal scrollbar onto every
+          route -- the whole site scrolled sideways because of the header. */}
+      <div className="mx-auto flex max-w-[1100px] flex-wrap items-baseline gap-x-5 gap-y-2 px-6 py-4">
         <NavLink
           to="/"
           className="font-mono"
@@ -50,7 +53,7 @@ export function TopBar() {
           PL·ANALYTICS
         </NavLink>
 
-        <nav className="flex gap-5">
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
           {TOOLS.map((t) => (
             <NavLink key={t.to} to={t.to} className="hoverable" style={item}>
               {t.label}

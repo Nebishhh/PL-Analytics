@@ -135,14 +135,14 @@ export function Landing() {
           lineHeight: 1.5,
           color: "var(--ink-700)",
           maxWidth: "54ch",
-          marginTop: "var(--s-5)",
+          marginTop: "var(--s-4)",
         }}
       >
         Market value, match outcome and playing-style clusters for the Premier
         League — each shown with what it cannot do.
       </p>
 
-      <hr className="rule" style={{ margin: "var(--s-7) 0 var(--s-5)" }} />
+      <hr className="rule" style={{ margin: "var(--s-6) 0 var(--s-5)" }} />
 
       {/* Readings and links together: the ordering rule is about sequence, not
           about gating (PRODUCT.md). */}
@@ -183,7 +183,7 @@ export function Landing() {
         ))}
       </div>
 
-      <hr className="rule" style={{ margin: "var(--s-7) 0 var(--s-5)" }} />
+      <hr className="rule" style={{ margin: "var(--s-6) 0 var(--s-5)" }} />
 
       {refused !== null && noForecast !== null && (
         <div>

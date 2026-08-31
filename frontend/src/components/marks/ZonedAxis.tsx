@@ -69,7 +69,7 @@ export function ZonedAxis({ min, max, value, zones, tier }: Props) {
               // is what the eye lands on. Density and position agree here --
               // the axis is ordered left to right -- so the two channels
               // reinforce rather than compete (DESIGN.md §1).
-              opacity: 0.16,
+              opacity: 0.30,
               borderRight: "var(--rule-w) solid var(--rule-200)",
             }}
           />

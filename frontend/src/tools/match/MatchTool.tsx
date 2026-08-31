@@ -106,7 +106,7 @@ export function MatchTool() {
         <h1 className="text-ink-900" style={{ fontSize: "var(--t-title)", lineHeight: 1.2, fontWeight: 600 }}>
           Match forecast
         </h1>
-        <p className="mt-2 text-ink-500">
+        <p className="mt-2 text-ink-500" style={{ maxWidth: "58ch", lineHeight: 1.55 }}>
           Win, draw or loss for a Premier League fixture — forecast by a model
           that had never seen that season.
         </p>

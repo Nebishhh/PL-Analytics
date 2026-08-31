@@ -146,7 +146,7 @@ function Headline({ tool }: { tool: ToolSummary }) {
             {ABOUT.match.f1(num(f1, 3), scheme)}
           </p>
         )}
-        <p className="mt-2 text-ink-500">{ABOUT.match.theTrade}</p>
+        <p className="mt-2 text-ink-500" style={{ maxWidth: "68ch" }}>{ABOUT.match.theTrade}</p>
       </>
     );
   }
@@ -215,7 +215,7 @@ export function About() {
       </div>
 
       {meta.tools.map((tool) => (
-        <Sheet key={tool.id}>
+        <Section key={tool.id}>
           <div
             className="mb-4 flex flex-wrap items-baseline justify-between gap-3 pb-3"
             style={{ borderBottom: "2px solid var(--ink-900)" }}
@@ -243,7 +243,12 @@ export function About() {
             </Link>
           </div>
 
-          <Headline tool={tool} />
+          {/* One measure for the whole reading, rather than a max-width on
+              each paragraph. The detector measured 150-character lines here:
+              this page's prose was running the full 1100px column. */}
+          <div style={{ maxWidth: "68ch" }}>
+            <Headline tool={tool} />
+          </div>
 
           {/* The limitation is not tucked inside a disclosure. It is the half
               of the headline a reader is most likely to skip and least able
@@ -253,7 +258,7 @@ export function About() {
               style={{ borderTop: "var(--rule-w) solid var(--rule-200)", paddingTop: "var(--s-3)" }}
           >
             <div className="label mb-1">What it cannot do</div>
-            <p className="text-ink-700">{tool.limitation}</p>
+            <p className="text-ink-700" style={{ maxWidth: "68ch" }}>{tool.limitation}</p>
           </div>
 
           {(plots[tool.id] ?? []).length > 0 && (
@@ -269,11 +274,11 @@ export function About() {
               </Disclosure>
             </div>
           )}
-        </Sheet>
+        </Section>
       ))}
 
       <Section title="Licensing">
-        <p className="text-ink-700">{ABOUT.licenceIntro}</p>
+        <p className="text-ink-700" style={{ maxWidth: "68ch" }}>{ABOUT.licenceIntro}</p>
         <dl className="mt-4 grid gap-3">
           {[
             ["Code", meta.licensing.code],
@@ -294,7 +299,7 @@ export function About() {
             </div>
           ))}
         </dl>
-        <p className="mt-4 text-ink-500">{meta.licensing.note}</p>
+        <p className="mt-4 text-ink-500" style={{ maxWidth: "68ch" }}>{meta.licensing.note}</p>
       </Section>
     </div>
   );

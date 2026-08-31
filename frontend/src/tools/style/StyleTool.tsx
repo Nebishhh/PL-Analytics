@@ -90,7 +90,7 @@ export function StyleTool() {
         <h1 className="text-ink-900" style={{ fontSize: "var(--t-title)", lineHeight: 1.2, fontWeight: 600 }}>
           Activity profile
         </h1>
-        <p className="mt-2 text-ink-500">
+        <p className="mt-2 text-ink-500" style={{ maxWidth: "58ch", lineHeight: 1.55 }}>
           Which activity cluster a player was grouped into — and how solid that
           grouping is. Activity profiles, not playing styles: this data has no
           passing, carrying or expected-goals columns.

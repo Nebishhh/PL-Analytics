@@ -152,7 +152,7 @@ export function StylePanel({
         </Disclosure>
       </div>
 
-      <p className="mt-4 text-ink-300" style={{ fontSize: "var(--t-body)" }}>
+      <p className="mt-4 text-ink-300" style={{ fontSize: "var(--t-body)", maxWidth: "68ch", lineHeight: 1.6 }}>
         {COMMON.positionHeldOut}
       </p>
 

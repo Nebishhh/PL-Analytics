@@ -125,7 +125,7 @@ does not glare under the blueprint density.
 --paper-200  #EFEBE3   recessed / inset well
 --rule-100   #E2DDD3   hairline, rail trough border
 --rule-200   #CFC8BA   divider, inactive tick
---ink-300    #948C7C   annotation, axis labels
+--ink-300    #766F61   annotation, axis labels
 --ink-500    #6B6455   secondary text
 --ink-700    #3A352C   body text
 --ink-900    #17150F   primary text, display, measured values
@@ -220,7 +220,7 @@ makes one face serve both densities.
 ### Broadsheet density — landing page
 
 ```
---b-display   clamp(44px, 6.5vw, 92px) / 0.95   display serif, the one big statement
+--b-display   clamp(40px, 5.4vw, 74px) / 0.95   display serif, the one big statement
 --b-lead      clamp(19px, 2.0vw, 24px) / 1.5    the standfirst under it
 --b-heading   32px / 1.15                        section heads
 --b-body      17px / 1.65                        editorial body
@@ -230,7 +230,7 @@ makes one face serve both densities.
 ### Blueprint density — tools and methodology
 
 ```
---t-micro     11px / 1.3    axis ticks, scale endpoints          mono
+--t-micro     12px / 1.3    axis ticks, scale endpoints          mono
 --t-label     12px / 1.2    field labels, UPPERCASE, 0.06em      grotesk
 --t-body      14px / 1.5    interface body                       grotesk
 --t-finding   18px / 1.5    the one sentence beside a mark       serif
@@ -561,6 +561,24 @@ mobile pass shows the player or match picker unusable at 375px — list clipped,
 keyboard covering results, or scroll trapped — Vaul is adopted for the picker on
 small viewports only, and the desktop popover is untouched. If the picker holds
 up, Vaul stays out and this note records why it was considered.
+
+---
+
+## 9b. Amended in Step 7, by measurement
+
+Three token values changed during the critique/audit pass. Recorded here so the
+scale in §2 and §3 stays the authority rather than drifting from the code.
+
+- **`--ink-300` #948C7C → #766F61.** Measured 3.04:1 against the page ground
+  while carrying real annotation text. Now 4.54:1 on paper-100 and 4.90:1 on a
+  sheet.
+- **`--t-micro` 11px → 12px.** The detector read it as body text, and on a
+  light ground 11px was genuinely tight. It no longer differs from `--t-label`
+  in size, which is fine: those two are separated by case and tracking, not by
+  scale step.
+- **`--b-display` max 92px → 74px.** At 92px the landing headline occupied 29%
+  of the viewport and pushed the three tool links below the fold, which turned
+  PRODUCT.md's ordering rule into the gate it explicitly is not.
 
 ---
 

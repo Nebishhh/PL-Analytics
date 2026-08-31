@@ -23,7 +23,10 @@
   --paper-200: #efebe3; /* recessed / inset well */
   --rule-100: #e2ddd3; /* hairline, rail trough border */
   --rule-200: #cfc8ba; /* divider, inactive tick */
-  --ink-300: #948c7c; /* annotation, axis labels */
+  /* Darkened from #948c7c after the critique measured it at 3.04:1 on
+     paper-100 -- it was carrying real annotation text, not decoration. Now
+     4.54:1 on the page ground and 4.90:1 on a sheet. */
+  --ink-300: #766f61; /* annotation, axis labels */
   --ink-500: #6b6455; /* secondary text */
   --ink-700: #3a352c; /* body text */
   --ink-900: #17150f; /* primary text, display, measured values */
@@ -52,14 +55,14 @@
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   /* broadsheet density -- the landing page only */
-  --b-display: clamp(44px, 6.5vw, 92px);
+  --b-display: clamp(40px, 5.4vw, 74px);
   --b-lead: clamp(19px, 2vw, 24px);
   --b-heading: 32px;
   --b-body: 17px;
   --b-caption: 13px;
 
   /* blueprint density -- tools and methodology */
-  --t-micro: 11px;
+  --t-micro: 12px;
   --t-label: 12px;
   --t-body: 14px;
   --t-finding: 18px;
