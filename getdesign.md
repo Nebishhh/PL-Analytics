@@ -1,298 +1,261 @@
-# getdesign.md — Step 1: Research / Taste
+# getdesign.md — Step 1: Research / Taste (redesign)
 
-Research for a unified React + FastAPI frontend replacing the three Streamlit
-apps. **No code or design files produced yet.** The three Streamlit apps remain
-untouched and working.
+Supersedes [archive/getdesign-2026-08-30.md](archive/getdesign-2026-08-30.md),
+which is kept because two of its findings survive intact and are cited below.
+
+**No code, no tokens, no chosen direction yet.** This records what was looked at,
+what was measured, and which directions survive a test the previous round did not
+apply.
 
 ---
 
-## 0. Method, and what I could not get
+## 0. Method, and what changed since the last round
 
-Honesty about sourcing, because it changes how much weight each finding carries.
+Every screenshot here was taken with **Playwright at 1440×900, deviceScaleFactor 2**,
+written to disk as a real file. The previous round's visual calls were made through
+the in-app browser pane, which composites at roughly one third regardless of
+viewport, clamps to a 448px floor, and cannot crop a region. That capped how
+confidently type could be judged: the four-triad specimen had to be rebuilt twice
+and was still unreadable, and the serif comparison only became legible when set at
+76px. Playwright removes that constraint — the Refero gallery capture below is
+2880×7850 and fully legible.
 
-| Source | Access | What I got |
+| Source | Access | What it gave |
 |---|---|---|
-| **Awwwards** | Full | Browsed the Data Visualization category (1,280 sites) and Sports category. Extracted current listings, opened detail pages, read community scores. |
-| **Fonts In Use** | Full | Sports topic (852 uses, 134 staff picks). Extracted real use names and, where the contributor wrote them up, actual typeface combinations. |
-| **Refero** | ❌ **Blocked** | Requires an account — *"Other pages are hidden. Log In or Sign Up to See All."* I did not create one. No Refero findings below. |
+| styles.refero.design | **Open.** No login wall, `/style/{uuid}` pages reachable | Extracted palettes and type scales for 5 systems |
+| Awwwards | Open | Sites of the Day, browsed broadly rather than by category |
+| Impeccable `craft-floor.md` | Local, installed Step 0 | A saturated-defaults list that indicts two things in the current build |
+| Previous getdesign.md | Archived | Two findings carried forward; see §4 |
 
-Where a reference was **verified in this session** it is marked ✅. Where it comes
-from domain knowledge rather than this session's browsing it is marked ○ — still
-real and checkable, but I did not open it just now. Treat ✅ as evidence and ○ as
-argument.
-
-**One correction worth recording:** Fonts In Use shows a "most used typefaces"
-sidebar on every topic page. It is tempting to read the Sports page's sidebar as
-"the typefaces of sports design" — Helvetica 1513, Futura 1237, Univers 655. It
-is not. I compared it against the News topic page and **the counts are byte-for-byte
-identical**, so it is a site-wide popularity list, not topic-scoped. Nothing in
-this document rests on it.
+Refero's main site was login-gated in the previous round and was skipped rather
+than guessed at. **The `styles.` subdomain is not gated** — that was verified, not
+assumed.
 
 ---
 
-## 1. Awwwards: what reads as trustworthy vs gimmicky
+## 1. The gating test: four uncertainty shapes
 
-The most useful thing I found was not a single site but a **natural experiment**.
-Two World Cup 2026 data projects, both current Awwwards nominees, taking opposite
-approaches — and the community scored them very differently.
+This is the change from the previous round, which ranked directions on how well
+they carried uncertainty *in general* and let a striking direction through with a
+noted risk. That is not strong enough. Every one of these three models outputs a
+different shape of uncertainty, and a direction that cannot carry all four
+honestly is **disqualified, not flagged**.
 
-### ✅ WC 2026 — Data Portraits *(nominee, Jul 2026)*
+| | Shape | Where it comes from | What it must show |
+|---|---|---|---|
+| **a** | Range with a tolerance | 01 value | A point, a band around it whose width is a *typical miss* rather than a bound, on a log scale, plus where the actual value fell |
+| **b** | Three-way probability distribution | 02 match | H·D·A in fixed order, never sorted, against a base rate that shows how small the model's edge is |
+| **c** | Discrete tier + continuous margin | 03 style | A confidence tier, the continuous margin behind it, printed thresholds, and a *second independent* signal (negative silhouette) that a tier alone would hide |
+| **d** | Refusal / no answer | 01 below its floor, 02 out of scope | That the instrument has a limit and this input is outside it — as a **state**, not an error, and not an alarm |
 
-> "Every FIFA World Cup 2026 match rebuilt in 3D from real data — ~1,500 events a
-> game become readable terrain. Real-time WebGL, data-driven crowd sound, live
-> scorer cards. Coded solo."
-
-Tags: Experimental, Sports, Animation, 3D, Data Visualization, Sound-Audio, WebGL,
-Three.js, GLSL.
-
-**Community scores: 6.30, 6.00, 7.00, 7.20, 7.90.**
-
-### ✅ World Cup 2026, simplified. *(nominee, Jun 2026)*
-
-> "Every team, stadium and match of the 2026 World Cup, built in a format that's
-> easy to digest. 48 nations as homes, 16 stadiums, each side's travel and heat,
-> and the road to the final."
-
-Tags: Clean, Colorful, Minimal, Data Visualization, CSS, HTML5, Javascript.
-
-**Community scores: 8.00, 7.70, 9.00, 8.00, 6.00.**
-
-### What that contrast says
-
-The same subject matter, the same year, the same jury pool. The one that describes
-itself as *"easy to digest"* outscores the one that turns 1,500 events into 3D
-terrain with generative crowd noise — by roughly a full point and a half at the
-median.
-
-I would not over-read five votes each. But the direction matches what the tag
-vocabulary itself implies: the spectacle project is tagged **Experimental**, the
-legible one is tagged **Clean / Minimal**. Awwwards rewards craft in both, and the
-craft that reads as *trustworthy* is the craft of compression.
-
-**The gimmick tell, generalised from the Data Visualization category listing:**
-projects where the visual metaphor has to be *learned* before any data can be read
-— terrain, particle fields, orbital diagrams, audio-reactive anything. The reader
-spends their attention decoding the encoding. For a project whose entire claim is
-"here is a number and here is how much to trust it", that is attention spent in
-exactly the wrong place.
-
-**The trust tell:** the number is legible in under a second, and the qualification
-is adjacent to it rather than beneath it.
-
-### Other ✅ listings worth knowing about
-
-From the Data Visualization category, current: *Redesigning Trust: Level2*,
-*Signal IQ (Setu by Pine Labs)*, *HydraDB*, *Cerebrium*, *Stone Center*,
-*Everest · The Ascent*. From Sports: *The Performance Lab*, *sensiq.co*, *Radian*,
-*Podium*, *Williams Grand Prix Tech*, *Cadillac Formula 1 Team*.
-
-The F1 team sites are a useful negative reference: they are *brand* sites wearing
-data as decoration — telemetry-styled ornament with no actual telemetry. That is
-the failure mode our project must avoid in the other direction, since we have real
-uncertainty to show and would be actively lying if we styled it as swagger.
+**(d) is the one that kills directions.** Most visual systems have a rich
+vocabulary for success and a single vocabulary for failure — red, a warning
+triangle, an alert box. This product refuses 163 of 661 players and has no forecast
+for 1,649 of 4,616 matches. Refusal is roughly a quarter of everything the site
+says. A system that can only express it as an error is unusable here.
 
 ---
 
-## 2. Typography
+## 2. Refero: five systems, real tokens
 
-### ✅ Verified from Fonts In Use
+Palettes and scales read from the style pages directly, not from thumbnails.
 
-**Inside Youth Basketball 2025 report** (Luka Dončić Foundation), Mar 2026 —
-designers Kurt Woerpel, Nejc Prah, Tracy Ma:
+**Linear** — *"midnight precision instrument."* Canvas `#08090a`, one acid-lime
+`#e4f222` used sparingly as "a functional flashlight," hairline **0.5px** borders,
+weights in a low **400–510** band rather than bold, tracking −0.022em, 6/12px radii.
+Its stated principle: *darkness as a substrate rather than a theme.*
 
-> "used **Focal** alongside **ABC Marist** and **VCR OSD Mono** for the report."
+**Miranda** — *"old-world broadsheet on warm cream."* Parchment `#e2dedb`, ink
+`#1d1d1b`, one ember orange `#c03f13` "like a hand-stamped seal." Display serifs at
+enormous sizes with sub-1.0 line-heights. **Components flat and borderless; depth
+comes from contrast, not shadow.**
 
-This is the single most relevant artefact I found: a *sports data report*, not a
-sports brand. Its type system is three-part —
+**Programa** — *"Swiss design studio at high noon."* Near-white, four greys, one
+highlighter yellow `#fbff2b`. Its line is the most useful sentence found in this
+round: **"chromatic real estate is rationed, not distributed."**
 
-- **Focal** — a contemporary grotesk, does the UI and figure work
-- **ABC Marist** — a serif, carries the prose and gives the document an editorial
-  voice rather than a dashboard voice
-- **VCR OSD Mono** — a mono, for the data itself
+**shadcn/ui** — *"clinical blueprint on frosted paper."* Achromatic; a single red
+`#e7000b` **reserved for destructive states and nothing else**. Reads as developer
+infrastructure rather than consumer product.
 
-That grotesk + serif + mono triad is exactly the structure a project like ours
-wants, and it is worth noting that a *foundation's youth basketball report* reached
-for a serif. Data-serious does not have to mean voice-less.
+**LaunchDarkly** — *"neon control room."* Charcoal, a violet→blue gradient as the
+brand's "electronic pulse," **elevation communicated through glow rather than
+shadow**, 30–60px pill radii.
 
-The Sports topic (852 uses) is otherwise dominated by identity work — clubs, kits,
-races, campaigns. ✅ *ballesterer* #206, an Austrian football magazine running a
-critical 100-page World Cup issue, is the closest thing to a sports-*journalism*
-register in the set. ✅ *Terzo Uomo* is literally a typographic analysis of football
-shirt numbering. Neither is a dashboard, and that gap is itself the finding: **there
-is very little prior art for "football analytics as a serious document."** Most
-football typography is either kit-and-crest heraldry or broadcast-graphic bombast.
+### The pattern across all five
 
-### ○ The three registers, named
-
-- **"Fantasy football app"** — Poppins, Montserrat, Nunito, heavy rounded geometrics,
-  gradient-filled numerals, badge shapes. Reads as gambling-adjacent. Actively
-  wrong for us: it signals confidence we do not have.
-- **"Corporate dashboard"** — Inter, Roboto, Open Sans, system stacks. Trustworthy
-  but voiceless. Our project has opinions ("the clustering is least trustworthy
-  where it is most interesting") and a voiceless typeface cannot carry them.
-- **"Serious analytics"** — a neutral grotesk for UI, a real mono for figures, and
-  optionally a serif for argument. Examples ○: FiveThirtyEight (Decima Mono +
-  Atlas Grotesk), The Pudding, Bloomberg Graphics, The Athletic's data pieces,
-  Observable, FBref/StatsBomb output.
-
-**The mono is not decoration.** Tabular figures that align across rows are the
-difference between a comparison table you can scan and one you have to read.
-Every one of our three projects is fundamentally a table of numbers with
-qualifications attached.
+Every one rations colour to a single chromatic voice against a neutral field. None
+of them distributes hue. That converges with what this project already needs for a
+different reason — a mark's colour must mean confidence and nothing else — and it
+sharpens the requirement: **the semantic scale is the exception that must be
+argued for, not the default.** Three semantic colours plus a null is already more
+chromatic vocabulary than any of these five systems spends in total.
 
 ---
 
-## 3. Five directions
+## 3. Awwwards, browsed broadly
 
-### Direction A — Data terminal
+Sites of the Day, across categories rather than filtered to data or sport. The
+winners are overwhelmingly **spectacle**: cinematic video heroes (Hobro Digital),
+retro-maximalist collage (index), dark 3D product worlds (Sharplink), photographic
+narrative (Merci Michel), oversized pixel display type.
 
-Dark ground, mono-forward, dense, high information-per-pixel. Numbers are the
-interface. Minimal chrome, no illustration, generous use of tabular figures and
-small-caps labels.
+Two exceptions are relevant here:
 
-- ○ Bloomberg Terminal aesthetic, ○ Observable notebooks, ○ Vercel/Linear dark
-  surfaces, ✅ *HydraDB* and *Cerebrium* from the Awwwards data-viz listing.
-- **Fit:** Strong. Our current Streamlit apps are already dark-purple, so this is
-  continuous with what exists. Density suits three projects under one roof.
-- **Risk:** Mono-everything becomes unreadable in prose, and this project has a
-  *lot* of prose — the caveats are the product. Terminal aesthetics also carry a
-  "quant who is very sure of himself" connotation that is the opposite of our
-  actual message.
+- **++hellohello, "AI in Design Report 2026"** — an editorial report: modular grid,
+  mixed image blocks, monospace annotation, a dotted halftone frame. This is what a
+  *document* looks like when it is designed rather than templated.
+- **Sharplink** — topographic contour lines as the ground. Contours encode a
+  continuous field, which is structurally the same problem as showing a margin or a
+  distribution.
 
-### Direction B — Editorial sports journalism
-
-Serif headlines, generous measure, charts embedded in argument rather than gridded
-into a dashboard. The page reads as a piece *about* the model, not a control panel
-*for* it.
-
-- ✅ *ballesterer* magazine, ✅ *Inside Youth Basketball 2025* report; ○ The Pudding,
-  ○ FiveThirtyEight long-form, ○ The Athletic tactical analysis.
-- **Fit:** Very strong on substance. Every one of our three projects has a written
-  finding at its centre — "learned home advantage, learned nothing about draws";
-  "least trustworthy where most interesting". Those are *sentences*, and editorial
-  design is built to carry sentences next to figures.
-- **Risk:** Weak on interaction. An editorial layout wants to be read top to bottom;
-  our apps are lookup tools where the user picks a player and gets an answer. Pure
-  editorial would fight that.
-
-### Direction C — Clean SaaS dashboard
-
-Light ground, card grid, Inter, restrained accent colour, generous whitespace,
-conventional chart library styling.
-
-- ✅ *Signal IQ (Setu by Pine Labs)*, ✅ *PartnerProp*; ○ Stripe Dashboard,
-  ○ Linear, ○ Posthog.
-- **Fit:** Fastest to build, most familiar to users, best component ecosystem.
-- **Risk:** **This is the direction most likely to make us dishonest.** SaaS
-  dashboard conventions are built to project competence — every metric in a card,
-  every card equally weighted, every number equally confident. A ×1.75 error range
-  and a 47%-accurate classifier rendered in that visual language will read as more
-  authoritative than they are. The form actively fights the content.
-
-### Direction D — Instrument panel / measurement device
-
-Explicitly borrows from scientific instruments and measurement: ranges drawn as
-ranges, error bars as first-class marks, tick scales, calibration language. The
-visual metaphor is a *gauge with tolerances*, not a scoreboard.
-
-- ○ Our World in Data, ○ FiveThirtyEight's election forecast "snake" and cone-of-
-  uncertainty charts, ○ NASA/JPL mission dashboards, ○ scientific poster
-  conventions; ✅ *Stone Center* (economics data) from the Awwwards listing.
-- **Fit:** This is the only direction where **uncertainty is the native visual
-  vocabulary rather than an addition to it.** Our three outputs are: a range
-  (project 01), a probability distribution (02), and a confidence tier with a
-  distance margin (03). All three are measurement statements.
-- **Risk:** Can tip cold and academic. Needs deliberate warmth — colour, a serif,
-  real player names and photos — or it feels like a lab report about football.
-
-### Direction E — Broadcast graphics / matchday
-
-Bold condensed type, team colours, high contrast, the visual language of Sky Sports
-and TNT match graphics.
-
-- ○ Sky Sports / Premier League broadcast packages, ○ FIFA/UEFA match graphics;
-  ✅ the F1 team sites (*Williams Grand Prix Tech*, *Cadillac F1*).
-- **Fit:** Immediately legible as football. Familiar to any visitor.
-- **Risk:** **Worst fit of the five.** Broadcast graphics exist to project certainty
-  and drama — they are advocacy, not analysis. There is no broadcast convention for
-  "we are 47% accurate and cannot predict draws". Adopting this language would
-  require either hiding our caveats or having them constantly clash with the styling.
+The previous round's measured finding survives and is worth restating, because it
+is the only quantitative evidence in either round about this exact trade: on the
+same jury, the WebGL spectacle World Cup piece scored **6.30 / 6.00 / 7.00 / 7.20 /
+7.90** while the clean, minimal one scored **8.00 / 7.70 / 9.00 / 8.00 / 6.00** —
+losing only on creativity. Spectacle did not win here even on a subject built for
+it.
 
 ---
 
-## 4. Which directions carry uncertainty without becoming a wall of warnings
+## 4. Carried forward from the archived round
 
-This is the real design problem, and it is worth stating precisely why it is harder
-here than in any of the three Streamlit apps individually.
+Two findings still hold and are not re-derived:
 
-**Each Streamlit app had one caveat shape.** Project 01: a multiplicative range.
-Project 02: a probability distribution plus a draw-blindness note. Project 03: a
-three-tier confidence badge plus a negative-silhouette flag. Individually, each got
-its own bespoke treatment.
-
-**A unified frontend has to hold all three at once, in one visual language**, and
-they are genuinely different kinds of doubt:
-
-| Project | Uncertainty shape | Native mark |
-|---|---|---|
-| 01 value | Multiplicative range (×1.75) + refusal below 900 min | Interval / error bar |
-| 02 match | 3-way probability distribution, ~47% top-1 accuracy | Stacked bar / simplex |
-| 03 style | Discrete confidence tier + continuous margin | Badge + distance comparison |
-
-Plus a **fourth** state the others do not have: **refusal**. Project 01 declines to
-predict under 900 minutes. That is not low confidence, it is *no answer*, and it
-needs a visual treatment distinct from "wide range".
-
-### Ranking the directions on this specific problem
-
-**D (Instrument panel) — strongest.** Ranges, tolerances and tiers are the same
-grammar. A ×1.75 band, a probability distribution and a centroid margin can all be
-drawn as *positions on a scale with a marked region*, which unifies three different
-statistical objects under one mark. Refusal becomes "outside measurable range" —
-a legible instrument state, not an error message.
-
-**B (Editorial) — strong, differently.** Editorial design's answer to uncertainty is
-*prose adjacency*: the qualification sits in the sentence next to the number, not in
-a callout below it. Our project-03 restructure already discovered this — the
-badge-plus-one-sentence pattern outperformed the paragraph. Editorial scales that
-instinct across all three projects. Weaker on the *comparative* case (two players
-side by side).
-
-**A (Data terminal) — workable but cold.** Terminals show precision well and doubt
-badly. Everything renders as equally hard numbers; there is no established terminal
-convention for "this figure is soft". Would need invented vocabulary.
-
-**C (SaaS dashboard) — actively hostile.** Card grids imply every metric is equally
-solid. Warnings become yellow boxes, and yellow boxes accumulate into exactly the
-wall the brief warns about. To show our caveats honestly we would be fighting the
-idiom on every screen.
-
-**E (Broadcast) — incompatible.** No convention for doubt at all.
-
-### The pattern that avoids the wall of warnings, whichever direction wins
-
-From what the project-03 restructure demonstrated empirically last session:
-
-1. **One glanceable state marker** (badge/colour/bar position) — not a sentence.
-2. **One short sentence** carrying the single most important qualification.
-3. **Everything else behind a disclosure** the reader opens if they care.
-4. **The uncertainty is drawn, not written**, wherever a mark can carry it — a
-   range as a range, a probability as a proportion, a margin as a gap.
-
-Rule 4 is what keeps it off the warning-wall. A yellow box is a warning. A bar with
-a visibly wide band is *information* — same honesty, no scolding.
+1. **The grotesk + serif + mono triad is the right structure** — evidenced by the
+   *Inside Youth Basketball 2025* report's Focal / ABC Marist / VCR OSD Mono. Which
+   specific faces fill it is reopened entirely in Step 4; nothing carries over.
+2. **Mono is load-bearing, not decorative.** Tabular figures that align down a
+   column are the difference between a comparison you can scan and one you read
+   twice. Impeccable's craft floor independently warns against *"monospace as a
+   costume for 'technical' rather than for code, data, or measurement"* — here it
+   is measurement, so it is earned rather than borrowed.
 
 ---
 
-## 5. What I am not doing yet
+## 5. What the craft floor says about the current build
 
-Not recommending one. You pick, then we move to DESIGN.md.
+Impeccable's saturated-defaults list names two things this build currently does.
+Recorded now so the redesign does not carry them forward:
 
-Two things I would want settled at that point, because they constrain the visual
-system more than the aesthetic does:
+- **"A colored `border-left` or `border-right` above 1px on cards, list items,
+  callouts, or alerts."** The `/about` page's "What it cannot do" block is a
+  `2px solid var(--state-low)` left border. It is the exact pattern.
+- **"Same-size cards of icon plus heading plus text as the page structure. Cards
+  are the lazy container; nested cards are always wrong."** The current system has
+  one container, `Panel`, used for controls, results, errors and licensing alike,
+  and `/about` nests content inside it.
 
-- **Is the unified app three tools under one shell, or one narrative with three
-  chapters?** Direction B only works for the second reading; D works for both.
-- **Does it need a comparison view** (two players, two matches side by side)? None
-  of the Streamlit apps have one. If yes, that pushes toward D or C, because
-  editorial layouts handle side-by-side comparison poorly.
+Two others it warns about are *earned* here rather than borrowed, and the new
+direction should keep them: mono for real measurement, and rails that are content
+rather than sparklines standing in for content.
+
+One is a hard ban worth adopting verbatim: **no kicker or eyebrow above a
+heading.**
+
+---
+
+## 6. Directions, each tested against all four shapes
+
+A direction passes only if it carries **a, b, c and d** honestly.
+
+### Direction 1 — Midnight precision instrument
+*Linear-adjacent. Near-black substrate, hairline borders, rationed accent.*
+
+| a | b | c | d |
+|---|---|---|---|
+| ✅ band on a dark rail | ✅ split rail | ✅ zoned axis | ✅ neutral grey null |
+
+**Passes — and is disqualified for a different reason.** This is what the site
+already is. As the outcome of a redesign it would mean the redesign did not happen.
+It stays here as the control: any direction that wins must beat it on something
+other than novelty.
+
+### Direction 2 — Editorial broadsheet
+*Miranda / ++hellohello adjacent. Warm ground, ink, one stamped accent, large
+display serif, flat and borderless, newspaper grid.*
+
+| a | b | c | d |
+|---|---|---|---|
+| ✅ error bars are native to print charts | ✅ stacked column, fixed order | ✅ printed axis with labelled thresholds | ✅ **strongest of any direction** |
+
+**Passes, strongly.** Shape (d) is where it wins: newspapers and statistical
+abstracts have a centuries-old convention for *no data* — an em-dash in the cell, a
+footnote, a break in the rule. It is neutral, unalarming, and instantly legible as
+"nothing here," which is exactly what a refusal is. No other direction has an
+inherited vocabulary for absence.
+
+Risk to carry into Step 2: a warm parchment ground plus large serif can tip into
+pastiche, and the tool pages are Operate/Read surfaces where that would cost
+scanability.
+
+### Direction 3 — Clinical blueprint / technical drawing
+*shadcn + Programa adjacent. Near-white, hairline 1px, Swiss grid, rationed signal.*
+
+| a | b | c | d |
+|---|---|---|---|
+| ✅ dimension line with tolerance is literally this drawing convention | ✅ proportional bar | ✅ a gauge face with printed zones | ✅ "outside calibrated range" is a drafting convention |
+
+**Passes.** Shape (a) is unusually well served: engineering drawings annotate a
+dimension *with its tolerance* as a matter of course, which is precisely what the
+×1.75 band is. Light ground is also a genuine departure from the incumbent.
+
+Risk: a near-white field gives the semantic scale less room to separate than a dark
+one does, and three states plus a null must stay distinguishable.
+
+### Direction 4 — Neon control room
+*LaunchDarkly adjacent. Charcoal, gradient brand voice, glow elevation.*
+
+| a | b | c | d |
+|---|---|---|---|
+| ⚠️ | ✅ | ✅ | ❌ |
+
+**Disqualified**, on (d) primarily. A neon cockpit's vocabulary for "no reading" is
+an alarm, and refusal here is correct behaviour rather than a fault — styling it as
+an alert misrepresents the product's best feature. Two structural conflicts
+compound it: a gradient on a mark encodes a value that does not exist, and glow as
+the elevation system puts a broadcast-graphic sheen on instruments that must read
+as measurement.
+
+### Direction 5 — Spectacle / expressive
+*The Awwwards SOTD majority. Video heroes, 3D, maximalist collage.*
+
+| a | b | c | d |
+|---|---|---|---|
+| ⚠️ | ⚠️ | ❌ | ❌ |
+
+**Disqualified.** It has no vocabulary for (d) that is not an error screen, and (c)
+requires showing two independent weak signals at once, which a spectacle system
+resolves by picking the more dramatic one. The jury scores in §3 also say it would
+not even win on its own terms.
+
+---
+
+## 7. Where this leaves Step 2
+
+Two directions survive on merit — **Editorial broadsheet (2)** and **Clinical
+blueprint (3)** — with **Midnight instrument (1)** as the incumbent control.
+
+They are not equally suited to every surface, and the modes recorded in PRODUCT.md
+already split the site: the landing page is **Persuade**, the three tools and the
+methodology page are **Operate/Read**. Direction 2's strength is voice and its
+inherited vocabulary for absence; Direction 3's strength is precision and
+scanability. Whether the answer is one direction throughout, or a single world with
+different density on Persuade versus Operate surfaces, is Step 2's decision and is
+deliberately left open here.
+
+**Not decided in this step**, and not to be inferred from it: palette values, type
+scale, spacing, specific typefaces (Step 4 reopens these with no carry-over from
+Newsreader or IBM Plex), component inventory, or page composition.
+
+---
+
+## 8. Evidence on disk
+
+Captures from this round, at true resolution:
+
+- `refero-gallery.png` — 2880×7850, the full gallery
+- `awwwards-sotd.png` — 2880×2800, Sites of the Day
+
+Both were taken with `frontend/scripts/shoot.mjs`, which is committed so any figure
+here can be re-captured rather than taken on trust.
