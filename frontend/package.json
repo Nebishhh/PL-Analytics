@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "node tests/e2e/run.mjs",
     "gen:types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/lib/api-types.d.ts",
     "crests": "node scripts/crests.mjs",
     "flatten-crest": "node scripts/flatten-crest.mjs"
