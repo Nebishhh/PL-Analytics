@@ -13,11 +13,13 @@ import ast
 import re
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from backend import artefacts as art  # noqa: E402
 from backend.config import ROOT  # noqa: E402
+from backend.routers import match as match_router  # noqa: E402
 
 FAILURES: list[str] = []
 
@@ -132,6 +134,29 @@ def main() -> int:
               m is not None and float(m.group(1)) == a.style["thresholds"][key],
               f"app={m.group(1) if m else None} "
               f"artefact={a.style['thresholds'][key]}")
+
+    print("\n--- 02 top pick comes from the stored, unrounded probabilities ---")
+    # The route is called directly with a stand-in request: it only reads
+    # request.app.state.artefacts, and this keeps the file free of httpx.
+    request = SimpleNamespace(app=SimpleNamespace(
+        state=SimpleNamespace(artefacts=a)))
+    # Rounded to 4 dp, H and D both read 0.4628 here; unrounded, D is ahead.
+    # The Streamlit app picks from the unrounded values and says draw.
+    res = match_router.held_out_forecast(request, 2872394)
+    check("game 2872394 top pick is D",
+          res.forecast is not None and res.forecast.top_pick == "D",
+          f"got {res.forecast.top_pick if res.forecast else None}")
+    check("game 2872394 is still served from OOF",
+          res.source == "precomputed_out_of_fold"
+          and res.computed_at_request_time is False)
+    mismatched = []
+    for game_id, row in a.match_oof_index.items():
+        stored = {k: row[f"p_{k}"] for k in a.match["target_order"]}
+        got = match_router.held_out_forecast(request, game_id).forecast
+        if got.top_pick != max(stored, key=stored.get):
+            mismatched.append(game_id)
+    check("top pick matches the stored argmax for every OOF match",
+          not mismatched, f"{len(mismatched)} differ: {mismatched[:5]}")
 
     print(f"\n{'=' * 60}")
     if FAILURES:
