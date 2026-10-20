@@ -12,9 +12,10 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   api,
+  classifyError,
   type HeldOutForecast,
   type MatchListItem,
   type ToolMeta,
@@ -29,6 +30,9 @@ const ALL = "__all__";
 export function MatchTool() {
   const { gameId } = useParams();
   const navigate = useNavigate();
+  // game_ids are integers. Anything else cannot name a match, so it is
+  // reported as not found without asking the API.
+  const invalid = gameId !== undefined && !/^\d+$/.test(gameId);
 
   const [seasons, setSeasons] = useState<number[]>([]);
   const [season, setSeason] = useState<number | null>(null);
@@ -37,7 +41,13 @@ export function MatchTool() {
   const [matches, setMatches] = useState<MatchListItem[]>([]);
   const [meta, setMeta] = useState<ToolMeta | null>(null);
   const [result, setResult] = useState<HeldOutForecast | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Two error states, so that clearing one cannot hide the other. loadError
+  // belongs to the season, meta and fixture-list loads and is never reset by
+  // navigation; readingError and missing belong to the match in the path and
+  // are reset whenever it changes.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [readingError, setReadingError] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     Promise.all([api.match.seasons(), api.match.meta()])
@@ -46,34 +56,47 @@ export function MatchTool() {
         setMeta(m);
         setSeason(s[s.length - 1] ?? null);
       })
-      .catch((e) => setError(String(e)));
+      .catch((e) => setLoadError(String(e)));
   }, []);
 
+  // Each effect below ignores a reply that arrives after its inputs changed.
+  // Changing season resets club, so two fixture-list requests are in flight at
+  // once and the older one could otherwise land last.
   useEffect(() => {
     if (season === null) return;
     setClub(ALL);
-    api.match.clubs(season).then(setClubs).catch((e) => setError(String(e)));
+    let active = true;
+    api.match.clubs(season)
+      .then((r) => { if (active) setClubs(r); })
+      .catch((e) => { if (active) setLoadError(String(e)); });
+    return () => { active = false; };
   }, [season]);
 
   useEffect(() => {
     if (season === null) return;
+    let active = true;
     api.match
       .matches(season, club === ALL ? undefined : club)
-      .then(setMatches)
-      .catch((e) => setError(String(e)));
+      .then((r) => { if (active) setMatches(r); })
+      .catch((e) => { if (active) setLoadError(String(e)); });
+    return () => { active = false; };
   }, [season, club]);
 
   useEffect(() => {
-    if (!gameId) {
+    setMissing(false);
+    setReadingError(null);
+    if (!gameId || invalid) {
       setResult(null);
       return;
     }
     setResult(null);
+    let active = true;
     api.match
       .heldOutForecast(Number(gameId))
-      .then(setResult)
-      .catch((e) => setError(String(e)));
-  }, [gameId]);
+      .then((r) => { if (active) setResult(r); })
+      .catch((e) => { if (!active) return; const c = classifyError(e); if (c.notFound) setMissing(true); else setReadingError(c.message); });
+    return () => { active = false; };
+  }, [gameId, invalid]);
 
   const options: ComboOption[] = useMemo(
     () =>
@@ -87,6 +110,25 @@ export function MatchTool() {
       })),
     [matches],
   );
+
+  // A failed load is checked first: the not-found notice says the backend is
+  // answering normally, which would be false.
+  const error = loadError ?? readingError;
+
+  if (!loadError && (missing || invalid)) {
+    return (
+      <Notice title="No such match">
+        <p style={{ maxWidth: "58ch" }}>
+          This URL names a match that is not in the dataset. The backend is
+          answering normally — the identifier just does not resolve.{" "}
+          <Link to="/match" style={{ borderBottom: "var(--rule-w) solid var(--accent)" }}>
+            Start from the picker
+          </Link>
+          .
+        </p>
+      </Notice>
+    );
+  }
 
   if (error) {
     return (
