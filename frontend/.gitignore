@@ -5,3 +5,9 @@ node_modules/
 dist/
 .vite/
 *.local
+# `tsc -b` in `npm run build` always writes tsconfig.tsbuildinfo beside
+# tsconfig.json, even with noEmit.
+*.tsbuildinfo
+# Generated from the committed artefacts by backend/tests/export_ui_fixtures.py
+# on every run, and never committed: a copy would be a second source of truth.
+tests/e2e/.fixtures/

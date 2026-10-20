@@ -137,8 +137,14 @@ def held_out_forecast(request: Request, game_id: int) -> HeldOutForecastResponse
 
     # Read, do not compute.
     order = list(a.match["target_order"])              # fixed H, D, A
-    probs = {k: round(float(stored[f"p_{k}"]), 4) for k in order}
-    top = max(probs, key=probs.get)
+    raw = {k: float(stored[f"p_{k}"]) for k in order}
+    # The top pick comes from the stored values, not the rounded ones. Rounding
+    # first can tie two outcomes, and max() then returns whichever comes first
+    # in H, D, A -- game 2872394 has D 0.46282 over H 0.46275, both 0.4628
+    # after rounding, and was served as a home win while the Streamlit app
+    # said draw.
+    top = max(raw, key=raw.get)
+    probs = {k: round(v, 4) for k, v in raw.items()}
 
     return HeldOutForecastResponse(
         status="ok",

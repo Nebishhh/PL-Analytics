@@ -39,29 +39,44 @@ export function StyleTool() {
   const [meta, setMeta] = useState<ToolMeta | null>(null);
   const [position, setPosition] = useState(ALL);
   const [result, setResult] = useState<StyleAssignment | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Two error states, so that clearing one cannot hide the other. loadError
+  // belongs to the meta and player-list loads and is never reset by
+  // navigation; readingError and missing belong to the player in the path and
+  // are reset whenever it changes. The slug itself is not format-checked here:
+  // slugs are the API's to define, and clients must use what they are given.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [readingError, setReadingError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
-    api.style.meta().then(setMeta).catch((e) => setError(String(e)));
+    api.style.meta().then(setMeta).catch((e) => setLoadError(String(e)));
   }, []);
 
+  // Both effects ignore a reply that arrives after their input changed, so a
+  // slow response for an earlier position or player cannot overwrite the
+  // current one.
   useEffect(() => {
+    let active = true;
     api.style
       .players(position === ALL ? undefined : position)
-      .then(setPlayers)
-      .catch((e) => setError(String(e)));
+      .then((r) => { if (active) setPlayers(r); })
+      .catch((e) => { if (active) setLoadError(String(e)); });
+    return () => { active = false; };
   }, [position]);
 
   useEffect(() => {
+    setMissing(false);
+    setReadingError(null);
     if (!slug) {
       setResult(null);
       return;
     }
     setResult(null);
+    let active = true;
     api.style.assignment(slug)
-      .then(setResult)
-      .catch((e) => { const c = classifyError(e); if (c.notFound) setMissing(true); else setError(c.message); });
+      .then((r) => { if (active) setResult(r); })
+      .catch((e) => { if (!active) return; const c = classifyError(e); if (c.notFound) setMissing(true); else setReadingError(c.message); });
+    return () => { active = false; };
   }, [slug]);
 
   const options: ComboOption[] = useMemo(
@@ -78,7 +93,11 @@ export function StyleTool() {
   const q = (meta?.quality ?? {}) as Record<string, unknown>;
   const silhouette = typeof q.silhouette === "number" ? q.silhouette : null;
 
-  if (missing) {
+  // A failed load is checked first: the not-found notice says the backend is
+  // answering normally, which would be false.
+  const error = loadError ?? readingError;
+
+  if (!loadError && missing) {
     return (
       <Notice title="No such player">
         <p style={{ maxWidth: "58ch" }}>

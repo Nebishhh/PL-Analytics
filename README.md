@@ -628,7 +628,7 @@ show in the gap between forecast and result.
 ## Setup
 
 ```bash
-pip install pandas numpy scikit-learn matplotlib streamlit joblib
+pip install pandas==2.3.3 numpy==2.4.6 scikit-learn==1.9.0 matplotlib==3.11.1 streamlit joblib
 ```
 
 Built against pandas 2.3.3, numpy 2.4.0, scikit-learn 1.9.0, matplotlib 3.11.1

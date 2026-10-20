@@ -35,14 +35,22 @@ export function ValueTool() {
   // /match/:gameId and /style/:slug already had.
   const { playerId } = useParams();
   const navigate = useNavigate();
-  const selected = playerId ? Number(playerId) : null;
+  // Player ids are integers. Anything else cannot name a player, so it is
+  // reported as not found without asking the API.
+  const invalid = playerId !== undefined && !/^\d+$/.test(playerId);
+  const selected = playerId && !invalid ? Number(playerId) : null;
 
   const [players, setPlayers] = useState<ValuePlayerListItem[] | null>(null);
   const [meta, setMeta] = useState<ToolMeta | null>(null);
   const [club, setClub] = useState(ALL);
   const [position, setPosition] = useState(ALL);
   const [result, setResult] = useState<ValueEstimate | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Two error states, so that clearing one cannot hide the other. loadError
+  // belongs to the mount-time list and meta load and is never reset by
+  // navigation; readingError and missing belong to the current player and are
+  // reset whenever the player in the path changes.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [readingError, setReadingError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
@@ -51,18 +59,24 @@ export function ValueTool() {
         setPlayers(p);
         setMeta(m);
       })
-      .catch((e) => setError(String(e)));
+      .catch((e) => setLoadError(String(e)));
   }, []);
 
   useEffect(() => {
+    setMissing(false);
+    setReadingError(null);
     if (selected === null) {
       setResult(null);
       return;
     }
     setResult(null);
+    // A response for a player who is no longer selected must not land: a slow
+    // reply for the previous pick would otherwise overwrite the current one.
+    let active = true;
     api.value.estimate(selected)
-      .then(setResult)
-      .catch((e) => { const c = classifyError(e); if (c.notFound) setMissing(true); else setError(c.message); });
+      .then((r) => { if (active) setResult(r); })
+      .catch((e) => { if (!active) return; const c = classifyError(e); if (c.notFound) setMissing(true); else setReadingError(c.message); });
+    return () => { active = false; };
   }, [selected]);
 
   const clubs = useMemo(
@@ -105,7 +119,11 @@ export function ValueTool() {
           | undefined)?.out_of_fold ?? null
       : null;
 
-  if (missing) {
+  // A failed mount-time load is checked first: the not-found notice says the
+  // backend is answering normally, which would be false.
+  const error = loadError ?? readingError;
+
+  if (!loadError && (missing || invalid)) {
     return (
       <Notice title="No such player">
         <p style={{ maxWidth: "58ch" }}>

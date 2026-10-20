@@ -89,6 +89,21 @@ Three, all following this pattern:
 Each was requested, confirmed, and verified before the file was touched. Follow the
 same sequence.
 
+### 0.2 Permitted exception: the CI workflow
+
+One file outside `backend/` and `frontend/` may be created and maintained:
+**`.github/workflows/ci.yml`**. GitHub reads workflows only from that path, so
+the file cannot live under `backend/` or `frontend/`.
+
+The exception covers that one file. It does not extend to other files under
+`.github/`, other workflows, or anything §0 lists.
+
+The workflow may only **check**: install pinned dependencies, run tests,
+typecheck, build into ignored output, and audit. It must not run `clean.py`,
+`train_final.py` or `cluster.py`, write to any artefact or `data/processed/**`,
+commit, publish, or deploy. A step that would change a protected file is a §0
+violation whether it runs locally or in CI.
+
 ---
 
 ## 1. Binding technical decisions
@@ -373,7 +388,11 @@ python -c "import joblib; [print(p, sorted(joblib.load(p).keys())) for p in ['01
 ```
 
 ```bash
-git status --porcelain | grep -vE '^\?\? (backend|frontend)/|^ M (backend|frontend)/' || echo "additive only - ok"
+if git status --porcelain --untracked-files=all | grep -vE '^\?\? (backend|frontend)/|^ M (backend|frontend)/|^(\?\?|M | M) \.github/workflows/ci\.yml$'; then
+  echo "NOT additive: the lines above are outside backend/ and frontend/" >&2; false
+else
+  echo "additive only - ok"
+fi
 ```
 
 ```bash

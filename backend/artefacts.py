@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 
 from . import config
 
@@ -88,12 +89,19 @@ class Artefacts:
     style_by_slug: dict[str, int] = field(default_factory=dict)
 
 
+# Every top-level key a route or adapter reads. A key missing here fails at
+# startup; one missing from this list fails later, as a 500 on the endpoint
+# that reads it.
 _EXPECTED = {
     "value": ("model", "feature_names", "error_factor", "min_pl_minutes",
-              "band_coverage", "caveat_thresholds", "cv_r2_mean", "cv_r2_std"),
-    "match": ("model", "cv", "class_labels", "target_order"),
+              "band_coverage", "caveat_thresholds", "cv_r2_mean", "cv_r2_std",
+              "sklearn_version", "n_training_rows", "trained_date"),
+    "match": ("model", "cv", "class_labels", "target_order",
+              "sklearn_version", "n_training_rows", "trained_date"),
     "style": ("model", "cluster_names", "cluster_sizes", "quality",
-              "thresholds", "position_adjacent", "feature_labels", "groups"),
+              "thresholds", "position_adjacent", "feature_labels", "groups",
+              "sklearn_version", "k", "n_players", "feature_names",
+              "trained_date"),
 }
 
 
@@ -108,8 +116,25 @@ def load() -> Artefacts:
         missing = [k for k in _EXPECTED[name] if k not in art]
         if missing:
             raise RuntimeError(
-                f"{name} artefact is missing {missing}. Re-run its "
-                f"train_final.py, or the backend is pointed at a stale file."
+                f"{name} artefact is missing {missing}. Check that the "
+                f"backend is pointed at the committed artefact (backend/"
+                f"config.py). If the key was never recorded, add it by the "
+                f"artefact-extension procedure in AGENTS.md section 0.1; do "
+                f"not re-run train_final.py (section 0)."
+            )
+
+    # scikit-learn does not support unpickling a model under a different
+    # version than wrote it. A mismatch may load with only a warning and then
+    # predict differently, so it is refused here rather than served. The fix
+    # is the environment (backend/requirements.txt), never a retrain (AGENTS.md
+    # section 0).
+    for name, art in (("value", value), ("match", match), ("style", style)):
+        if art["sklearn_version"] != sklearn.__version__:
+            raise RuntimeError(
+                f"{name} artefact was built with scikit-learn "
+                f"{art['sklearn_version']}, but {sklearn.__version__} is "
+                f"installed. Install the version pinned in "
+                f"backend/requirements.txt."
             )
 
     value_players = pd.read_csv(config.VALUE_PLAYERS, encoding="utf-8")
