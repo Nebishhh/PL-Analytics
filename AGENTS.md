@@ -116,8 +116,9 @@ other files under `api/`, `.vercelignore`, or anything §0 lists.
 
 - `api/index.py` may only import `backend.app:app`. It defines no routes, loads
   no artefact and calls no model. §2.1 applies to it exactly as to `backend/`.
-- The root `requirements.txt` contains only `-r backend/requirements.txt`. The
-  pinned stack has one source.
+- The root `requirements.txt` is the single source of the pinned stack.
+  `backend/requirements.txt` contains only `-r ../requirements.txt`, so CI and
+  local installs keep their existing command.
 - `.python-version` must match the `python-version` CI tests against.
 - `vercel.json` may only install, build into ignored output, route, and include
   or exclude files. It must not run `clean.py`, `train_final.py` or
@@ -128,7 +129,7 @@ these paths.
 
 #### Rejected alternatives (§7.3)
 
-Two other Vercel layouts were evaluated and not adopted:
+Three alternatives were evaluated and not adopted:
 
 - **Vercel Services** (Beta at the time). Services is Vercel's documented route
   for a Python backend beside another framework, but a service is built from
@@ -143,6 +144,11 @@ Two other Vercel layouts were evaluated and not adopted:
   request to the app, so the single-page-app fallback for `BrowserRouter`
   routes would have had to be added to `backend/app.py` — a deployment concern
   moved into the backend — and it would have added a root `pyproject.toml`.
+- **A root `requirements.txt` containing only `-r backend/requirements.txt`.**
+  This was the first version. uv and pip both resolve it, but Vercel's build
+  parses the file itself before installing and failed with "Error parsing
+  included file ... at position 0". Copying the pins into both files was also
+  rejected: two lists of pins will eventually disagree.
 
 The file-based `api/` function with `"framework": null` keeps the backend
 unchanged and the deployment surface to the four files above. Revisit if
