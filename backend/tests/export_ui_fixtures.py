@@ -16,6 +16,10 @@ Two readings per tool are exported, and one display field in each is replaced
 with a marker -- STALE_RESPONSE_A for the first, FRESH_RESPONSE_B for the
 second -- so a test can tell from page text alone which response the page is
 showing. Nothing else is altered. Read-only: this writes only the output file.
+
+One more match is exported unmarked, from the earliest season with forecasts,
+so a deep link to a match outside the default (latest) season can be tested
+against its real club names.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from backend import artefacts as art  # noqa: E402
-from backend.routers import match, style, value  # noqa: E402
+from backend.routers import match, meta, style, value  # noqa: E402
 
 
 def _dump(model) -> dict:
@@ -59,6 +63,10 @@ def build() -> dict:
     fixtures = match.matches(req, season=season, club=None)
     ga, gb = fixtures[0], fixtures[1]
 
+    early = seasons[0]
+    early_fixtures = match.matches(req, season=early, club=None)
+    ge = early_fixtures[0]
+
     splayers = style.players(req, position=None)
     sa, sb = splayers[0], splayers[1]
 
@@ -75,9 +83,11 @@ def build() -> dict:
     return {
         "ids": {"value": [va.player_id, vb.player_id],
                 "match": [ga.game_id, gb.game_id],
+                "match_early": {"game_id": ge.game_id, "season": early},
                 "style": [sa.slug, sb.slug],
                 "season": season},
         "responses": {
+            "/api/meta": _dump(meta.meta(req)),
             "/api/value/players": [_dump(p) for p in vplayers],
             "/api/value/meta": _dump(value.meta(req)),
             f"/api/value/players/{va.player_id}/estimate": estimate(va.player_id, "STALE_RESPONSE_A"),
@@ -88,6 +98,10 @@ def build() -> dict:
             f"/api/match/matches?season={season}": [_dump(m) for m in fixtures],
             f"/api/match/matches/{ga.game_id}/held-out-forecast": forecast(ga.game_id, "STALE_RESPONSE_A"),
             f"/api/match/matches/{gb.game_id}/held-out-forecast": forecast(gb.game_id, "FRESH_RESPONSE_B"),
+            f"/api/match/clubs?season={early}": match.clubs(req, season=early),
+            f"/api/match/matches?season={early}": [_dump(m) for m in early_fixtures],
+            f"/api/match/matches/{ge.game_id}/held-out-forecast":
+                _dump(match.held_out_forecast(req, ge.game_id)),
             "/api/style/meta": _dump(style.meta(req)),
             "/api/style/players": [_dump(p) for p in splayers],
             f"/api/style/players/{sa.slug}/assignment": assignment(sa.slug, "STALE_RESPONSE_A"),

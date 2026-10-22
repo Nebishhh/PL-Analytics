@@ -138,8 +138,8 @@ export function Landing() {
           marginTop: "var(--s-4)",
         }}
       >
-        Market value, match outcome and playing-style clusters for the Premier
-        League — each shown with what it cannot do.
+        Market value, match outcome and activity profiles for the Premier
+        League. Each is shown with what it cannot do.
       </p>
 
       <hr className="rule" style={{ margin: "var(--s-6) 0 var(--s-5)" }} />

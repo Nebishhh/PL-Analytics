@@ -67,6 +67,8 @@ export type HeldOutForecast = ForecastOk | ForecastOutOfScope;
 
 export type StyleAssignment = Schemas["StyleAssignmentResponse"];
 export type StylePlayerListItem = Schemas["StylePlayerListItem"];
+/** The API's names for the separation zones: low, moderate, clear. */
+export type ZoneState = Schemas["Zone"]["state"];
 export type MatchListItem = Schemas["MatchListItem"];
 
 /* -- /about ---------------------------------------------------------------- */

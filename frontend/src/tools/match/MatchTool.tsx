@@ -54,7 +54,9 @@ export function MatchTool() {
       .then(([s, m]) => {
         setSeasons(s);
         setMeta(m);
-        setSeason(s[s.length - 1] ?? null);
+        // Default to the latest season unless a linked match has already
+        // set its own, which can land first.
+        setSeason((prev) => prev ?? s[s.length - 1] ?? null);
       })
       .catch((e) => setLoadError(String(e)));
   }, []);
@@ -93,7 +95,15 @@ export function MatchTool() {
     let active = true;
     api.match
       .heldOutForecast(Number(gameId))
-      .then((r) => { if (active) setResult(r); })
+      .then((r) => {
+        if (!active) return;
+        setResult(r);
+        // Show the linked match's season, so the picker lists the match. A
+        // served forecast is always in a listed season; an out-of-scope match
+        // is not, and leaves the dropdown alone. Picking a match from the
+        // current season sets the same value, which keeps the club filter.
+        if (r.status === "ok") setSeason(r.match.season);
+      })
       .catch((e) => { if (!active) return; const c = classifyError(e); if (c.notFound) setMissing(true); else setReadingError(c.message); });
     return () => { active = false; };
   }, [gameId, invalid]);
