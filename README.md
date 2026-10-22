@@ -57,16 +57,6 @@ The modelling scripts and Streamlit apps have their own setup. See the write-ups
 <details>
 <summary><b>Data: sources, licences, committed tables</b></summary>
 
-Three progressively harder machine learning projects built on Transfermarkt
-football data, working up from regression to classification to unsupervised
-clustering.
-
-| # | Project | Technique | Status |
-|---|---------|-----------|--------|
-| 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
-| 02 | **match-predictor** | Classification | Complete, with a Streamlit app for match forecasts |
-| 03 | **style-finder** | K-Means clustering | Complete |
-
 ## Data
 
 Source: [davidcariboo/player-scores](https://www.kaggle.com/datasets/davidcariboo/player-scores)
@@ -693,11 +683,6 @@ show in the gap between forecast and result.
   [02's future work](#future-work-deliberately-deferred). The train/test gap
   points at regularisation specifically.
 - **Draw-specific modelling** — an ordinal or two-stage formulation, same section.
-- **A Streamlit app for 03-style-finder** — the only one of the three without one.
-  It would have to surface `margin_to_next` and per-player silhouette rather than
-  presenting a confident archetype label, since 24% of players sit within 0.5 of a
-  rival centroid. Those columns exist in `cluster_assignments.csv` precisely so that
-  is possible.
 - **Cross-season cluster stability for 03** — whether these groupings persist year
   to year is untestable from a single-season dataset. Would need a second season of
   the same stats.
@@ -744,12 +729,18 @@ on Python 3.12.
     clean.py                  raw CSV -> 315-player activity-profile table
     cluster.py                scaling, k selection, stability, naming, validation
     train_final.py            fits and persists the clustering
+    app.py                    Streamlit app
     model.joblib              fitted Pipeline + quality metadata
     cluster_assignments.csv   per-player cluster, name and uncertainty
     plots/                    k selection, group variance, profiles, PCA
+api/
+    index.py      Vercel entrypoint, imports backend.app:app
+backend/          FastAPI app serving the three artefacts, read-only
 data/
     raw/          Kaggle download (gitignored - see above)
-    processed/    both derived tables (committed)
+    processed/    the four derived tables (committed)
+frontend/         React + TypeScript web app
+requirements.txt  pinned Python stack, used by backend/ and Vercel
 ```
 
 </details>
