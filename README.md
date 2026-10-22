@@ -43,7 +43,9 @@ Prerequisites: Python 3.12 and Node.js 22.
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # macOS / Linux
+# .venv\Scripts\activate         # Windows (cmd or PowerShell)
+# source .venv/Scripts/activate  # Windows (Git Bash)
 pip install -r requirements.txt
 cd frontend
 npm ci
