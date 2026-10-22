@@ -8,8 +8,8 @@ Supersedes [archive/DESIGN-2026-08-30.md](archive/DESIGN-2026-08-30.md).
 credibility, then uses a tool — rather than forcing one treatment across two
 genuinely different jobs.
 
-**Still no implementation code.** Typefaces were chosen in Step 4 and are recorded
-in §3.
+**Written before any implementation code.** It is now the visual system reference
+the frontend implements. Typefaces were chosen in Step 4 and are recorded in §3.
 
 ---
 
