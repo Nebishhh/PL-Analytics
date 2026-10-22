@@ -6,7 +6,7 @@
  *                 (from the repository root)
  *   2. a build:   npm run build
  *
- * Serves the build with Vite's preview server on localhost, runs both suites
+ * Serves the build with Vite's preview server on localhost, runs every suite
  * in headless Chromium, and exits non-zero if any scenario fails.
  *
  *   --fixtures <file>  default tests/e2e/.fixtures/fixtures.json
@@ -20,6 +20,9 @@ import { chromium } from "playwright";
 import { preview } from "vite";
 import { run as staleResponse } from "./stale-response.e2e.mjs";
 import { run as routeErrors } from "./route-errors.e2e.mjs";
+import { run as styleRail } from "./style-rail.e2e.mjs";
+import { run as copy } from "./copy.e2e.mjs";
+import { run as matchDeepLink } from "./match-deeplink.e2e.mjs";
 
 const frontend = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const args = process.argv.slice(2);
@@ -55,6 +58,9 @@ try {
   results = [
     ...(await staleResponse(browser, base, fx)),
     ...(await routeErrors(browser, base, fx)),
+    ...(await styleRail(browser, base, fx)),
+    ...(await copy(browser, base, fx)),
+    ...(await matchDeepLink(browser, base, fx)),
   ];
 } finally {
   await browser.close();
