@@ -16,7 +16,7 @@ WHY HGB-BALANCED, AND NOT THE MORE ACCURATE MODEL
 
   It earns that accuracy substantially by declining to predict draws. Its
   draw recall is 0.11: 317 draw predictions across 2,967 test matches, when
-  697 draws actually occurred. For an app whose entire purpose is showing a
+  686 draws actually occurred. For an app whose entire purpose is showing a
   Win/Draw/Loss forecast, a model that has quietly reduced the problem to
   two classes is a worse product than a slightly less accurate one that
   attempts all three.
