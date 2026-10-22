@@ -12,16 +12,26 @@
  * does not support.
  */
 
-import type { StyleAssignment, ToolMeta } from "../../lib/api";
+import type { StyleAssignment, ToolMeta, ZoneState } from "../../lib/api";
 import { num, ordinal, pct } from "../../lib/format";
 import { COMMON, STYLE } from "../../lib/copy";
-import { ZonedAxis, type AxisZone } from "../../components/marks/ZonedAxis";
-import { Rail, Needle } from "../../components/marks/Rail";
+import { ZonedAxis } from "../../components/marks/ZonedAxis";
+import { Rail, Needle, type MarkState } from "../../components/marks/Rail";
 import { Disclosure } from "../../components/ui/Disclosure";
 import { PlayerSignature } from "../../components/graphics/PlayerSignature";
 import { Sheet } from "../../components/ui/Sheet";
 import { StateChip } from "../../components/ui/StateChip";
 import { Crest } from "../../components/graphics/Crest";
+
+// The API names zones by how separated a player is; the marks draw ink
+// density. A Record over the generated union means a zone state added to
+// the backend fails the typecheck here instead of drawing with no ink.
+// Same order as tierState below: contested is weak, borderline qualified.
+const ZONE_INK: Record<ZoneState, MarkState> = {
+  low: "weak",
+  moderate: "qualified",
+  clear: "strong",
+};
 
 const GROUP_LABEL: Record<string, string> = {
   ATTACKING_OUTPUT: "Attacking output",
@@ -118,7 +128,7 @@ export function StylePanel({
         min={data.axis.min}
         max={data.axis.max}
         value={data.axis.value}
-        zones={data.axis.zones as unknown as AxisZone[]}
+        zones={data.axis.zones.map((z) => ({ ...z, state: ZONE_INK[z.state] }))}
         tier={a.tier}
       />
 
