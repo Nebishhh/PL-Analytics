@@ -29,6 +29,26 @@ import { ValuePanel } from "./ValuePanel";
 
 const ALL = "__all__";
 
+/**
+ * The out-of-fold band coverage from the value meta. The caveat beside the
+ * band quotes it, so a missing or malformed figure throws rather than
+ * silently dropping the caveat or printing a wrong number.
+ */
+function readBandCoverage(meta: ToolMeta): number {
+  const bc = meta.quality?.band_coverage;
+  const oof =
+    typeof bc === "object" && bc !== null && "out_of_fold" in bc
+      ? bc.out_of_fold
+      : undefined;
+  if (typeof oof !== "number" || !Number.isFinite(oof) || oof < 0 || oof > 1) {
+    throw new Error(
+      `value meta: quality.band_coverage.out_of_fold is ${JSON.stringify(oof)}, ` +
+        "expected a number between 0 and 1",
+    );
+  }
+  return oof;
+}
+
 export function ValueTool() {
   // The selected player lives in the path, not in component state, so a
   // reading is linkable and the back button works -- the same contract
@@ -41,7 +61,7 @@ export function ValueTool() {
   const selected = playerId && !invalid ? Number(playerId) : null;
 
   const [players, setPlayers] = useState<ValuePlayerListItem[] | null>(null);
-  const [meta, setMeta] = useState<ToolMeta | null>(null);
+  const [bandCoverage, setBandCoverage] = useState<number | null>(null);
   const [club, setClub] = useState(ALL);
   const [position, setPosition] = useState(ALL);
   const [result, setResult] = useState<ValueEstimate | null>(null);
@@ -56,8 +76,9 @@ export function ValueTool() {
   useEffect(() => {
     Promise.all([api.value.players(), api.value.meta()])
       .then(([p, m]) => {
+        const coverage = readBandCoverage(m);
         setPlayers(p);
-        setMeta(m);
+        setBandCoverage(coverage);
       })
       .catch((e) => setLoadError(String(e)));
   }, []);
@@ -111,13 +132,6 @@ export function ValueTool() {
     { id: ALL, label: "All clubs" },
     ...clubs.map((c) => ({ id: c, label: c })),
   ];
-
-  const bandCoverage =
-    meta && typeof meta.quality === "object" && meta.quality !== null
-      ? ((meta.quality as Record<string, unknown>).band_coverage as
-          | { out_of_fold: number }
-          | undefined)?.out_of_fold ?? null
-      : null;
 
   // A failed mount-time load is checked first: the not-found notice says the
   // backend is answering normally, which would be false.
