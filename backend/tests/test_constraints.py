@@ -63,6 +63,76 @@ def check(name: str, condition: bool, detail: str = "") -> None:
         FAILURES.append(name)
 
 
+# Methods only a classifier has. The match model is the only classifier the
+# backend loads, so none of these has a legitimate caller.
+CLASSIFIER_METHODS = {"predict_proba", "predict_log_proba", "decision_function",
+                      "staged_predict", "staged_predict_proba"}
+# The only artefacts whose model may be called (AGENTS.md 2.2).
+PREDICTING_ARTEFACTS = {"value", "style"}
+
+
+def _artefact_model(node: ast.AST) -> str | None:
+    """'value' for `<x>.value["model"]`, 'match' for `match["model"]`, etc."""
+    if not (isinstance(node, ast.Subscript)
+            and isinstance(node.slice, ast.Constant)
+            and node.slice.value == "model"):
+        return None
+    base = node.value
+    if isinstance(base, ast.Attribute):
+        return base.attr
+    if isinstance(base, ast.Name):
+        return base.id
+    return None
+
+
+def match_model_violations(source: str) -> list[str]:
+    """Every way this source could put the match model to work.
+
+    The older check searched only files named after the match router, so a
+    predict_proba call added anywhere else in backend/ passed. Searching every
+    file for `.predict(` is not the answer either, because the value route
+    legitimately predicts. So the rule is stated about the match model itself,
+    on the AST, which also keeps prose out of it (AGENTS.md 7.1):
+
+      1. No classifier-only method is called, on anything.
+      2. `.predict(` is called only on `<x>.value["model"]` or
+         `<x>.style["model"]`, written out, so an alias cannot launder it.
+      3. The match artefact's "model" key is never read, by subscript or .get.
+      4. joblib is imported only by artefacts.py, so nothing loads a second
+         copy of the match model (checked by the caller, which knows the path).
+    """
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            method, receiver = node.func.attr, node.func.value
+            if method in CLASSIFIER_METHODS:
+                found.append(f"line {node.lineno}: .{method}(")
+            elif (method == "predict"
+                  and _artefact_model(receiver) not in PREDICTING_ARTEFACTS):
+                found.append(f"line {node.lineno}: .predict( on something "
+                             f"other than the value or style model")
+            elif (method == "get" and node.args
+                  and isinstance(node.args[0], ast.Constant)
+                  and node.args[0].value == "model"
+                  and getattr(receiver, "attr", getattr(receiver, "id", None))
+                  == "match"):
+                found.append(f"line {node.lineno}: match.get(\"model\")")
+        elif _artefact_model(node) == "match":
+            found.append(f"line {node.lineno}: match[\"model\"]")
+    return found
+
+
+def imports_joblib(source: str) -> bool:
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import) and any(
+                n.name.split(".")[0] == "joblib" for n in node.names):
+            return True
+        if (isinstance(node, ast.ImportFrom) and node.module
+                and node.module.split(".")[0] == "joblib"):
+            return True
+    return False
+
+
 def main() -> int:
     a = art.load()
     # Code only: see code_only() for why the raw source is not searched.
@@ -78,6 +148,22 @@ def main() -> int:
           not any(re.search(r"\.predict\(", s) for s in match_files.values()))
     check("oof_predictions.csv is the forecast source",
           any("oof" in s.lower() for s in match_files.values()))
+
+    print("\n--- AGENTS.md 2.1: the match model predicts nowhere in backend/ "
+          "or api/ ---")
+    served = [p for p in (ROOT / "backend").rglob("*.py")
+              if "tests" not in p.relative_to(ROOT).parts]
+    served.append(ROOT / "api" / "index.py")
+    raw_src = {p: p.read_text(encoding="utf-8") for p in served}
+    uses = {p.relative_to(ROOT).as_posix(): match_model_violations(s)
+            for p, s in raw_src.items()}
+    uses = {p: v for p, v in uses.items() if v}
+    check(f"match model never used for prediction ({len(served)} files)",
+          not uses, str(uses))
+    loaders = sorted(p.relative_to(ROOT).as_posix()
+                     for p, s in raw_src.items() if imports_joblib(s))
+    check("joblib imported only by backend/artefacts.py",
+          loaders == ["backend/artefacts.py"], str(loaders))
 
     print("\n--- AGENTS.md 1.2: read-only over the artefacts ---")
     for bad in ("joblib.dump", ".to_csv(", ".fit(", ".fit_predict(", "open("):

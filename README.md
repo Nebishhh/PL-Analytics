@@ -305,7 +305,7 @@ streamlit run 02-match-predictor/app.py    # interactive app
 
 **Logistic regression is more accurate and is not what ships.** It earns its
 51.2% substantially by declining to predict draws — 317 draw predictions across
-2,967 test matches when 697 draws occurred. For a Win/Draw/Loss forecast, a model
+2,967 test matches when 686 draws occurred. For a Win/Draw/Loss forecast, a model
 that has quietly reduced the problem to two classes is a worse product than a
 slightly less accurate one that attempts all three. HGB-balanced has the best
 macro F1, the metric that refuses to let draw-blindness hide, and still beats the
@@ -389,7 +389,7 @@ the answer is visible.
 about draws.** Draw precision sits at 0.26 in every configuration tested. The balanced
 variants change only how *often* draws are guessed, not how well: LogReg-balanced lifts
 draw recall from 0.11 to 0.59 and falls *below* the dummy on accuracy, predicting 1,600
-draws where 697 occurred. Draws have no distinctive feature signature — they happen
+draws where 686 occurred. Draws have no distinctive feature signature — they happen
 between evenly matched teams, which is a region of feature space rather than a
 direction in it. Worth noting what it *does* get right: across the 2,967 matches
 in the app it predicts 682 draws against 686 that actually occurred. It has the
