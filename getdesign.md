@@ -3,7 +3,8 @@
 Supersedes [archive/getdesign-2026-08-30.md](archive/getdesign-2026-08-30.md),
 which is kept because two of its findings survive intact and are cited below.
 
-**No code, no tokens, no chosen direction yet.** This records what was looked at,
+**Written before any code, tokens or chosen direction existed; kept as the
+research record behind DESIGN.md.** This records what was looked at,
 what was measured, and which directions survive a test the previous round did not
 apply.
 

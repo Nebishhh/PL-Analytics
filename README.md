@@ -750,6 +750,14 @@ requirements.txt  pinned Python stack, used by backend/ and Vercel
 
 </details>
 
+## Project documents
+
+- [AGENTS.md](AGENTS.md) — the rules for changing this repository, and the reasons behind them.
+- [DESIGN.md](DESIGN.md) — the visual system the web app implements.
+- [API.md](API.md) — the binding contract between the backend and the web app.
+- [PRODUCT.md](PRODUCT.md) — who the site is for, and the product decisions behind it.
+- [archive/](archive/) — superseded first-round design documents, kept because the current ones cite them.
+
 ## Licensing
 
 Three different things, under three different terms.

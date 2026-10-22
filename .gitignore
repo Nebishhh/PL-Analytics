@@ -49,6 +49,12 @@ ENV/
 .idea/
 .DS_Store
 Thumbs.db
+*.log
+
+# pytest writes its own .gitignore inside this folder; listed here so the
+# rule does not depend on that. .vercel/ is written by `vercel link`.
+.pytest_cache/
+.vercel/
 
 # local tooling config
 .claude/

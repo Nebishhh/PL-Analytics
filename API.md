@@ -1,6 +1,7 @@
 # API.md — contract for the unified frontend
 
-Spec only. **No backend or frontend code yet.**
+**Written as a spec before any backend or frontend code existed.** It is now the
+binding API contract: `backend/schemas.py` implements it, and the two must agree.
 
 Governed by [AGENTS.md](AGENTS.md); marks described in [DESIGN.md](DESIGN.md).
 
