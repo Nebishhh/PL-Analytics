@@ -1,6 +1,61 @@
 # PL-Analytics
 
+Three machine learning tools for exploring Premier League player values, historical match forecasts, and on-field activity profiles.
+
 **Live site:** [pl-analytics.nebanebish.com](https://pl-analytics.nebanebish.com)
+
+![PL-Analytics landing page](frontend/docs/readme/hero.png)
+
+## What it does
+
+- **Value predictor.** Estimates a Premier League player's market value from their appearance record, and gives the estimate as a range.
+- **Match predictor.** Shows the chances of a home win, a draw and an away win for a past Premier League match.
+- **Activity profiles.** Groups Premier League outfielders by what they do per 90 minutes, and shows how close each player is to another group.
+
+<table>
+  <tr>
+    <td width="33%"><img src="frontend/docs/readme/value.png" alt="Value predictor: a player's estimated value range"></td>
+    <td width="33%"><img src="frontend/docs/readme/match.png" alt="Match predictor: home, draw and away probabilities"></td>
+    <td width="33%"><img src="frontend/docs/readme/style.png" alt="Activity profiles: a player's group and nearest rival"></td>
+  </tr>
+  <tr>
+    <td align="center">Value predictor</td>
+    <td align="center">Match predictor</td>
+    <td align="center">Activity profiles</td>
+  </tr>
+</table>
+
+## Engineering highlights
+
+- **Honest match forecasts.** Every forecast comes from a model that had not seen that season. The app never asks the final model to predict a match it was trained on, and a test enforces this.
+- **Pinned and verified stack.** Library versions are pinned exactly. When one was withdrawn upstream, its replacement was adopted only after it gave bit-identical output.
+- **Startup checks.** The API checks each saved model when it starts. If a model is missing data or was saved with a different library version, the API refuses to start.
+- **Continuous integration.** Every push runs the constraint tests, a typechecked build, dependency audits, a check that the API types match the backend, and end-to-end tests in a real browser.
+- **Audit fixes.** A code audit found three bugs. Each fix has a test: the top pick on near-tied matches, late responses overwriting the current view, and errors that stuck after navigation. Dev-dependency advisories were also patched.
+
+## Tech stack
+
+Python 3.12, pandas, scikit-learn, FastAPI · React, TypeScript, Vite, custom SVG charts · Playwright, GitHub Actions · Vercel. The original Streamlit apps are kept in each project folder.
+
+## Run locally
+
+Prerequisites: Python 3.12 and Node.js 22.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cd frontend
+npm ci
+npm run dev:all   # API on :8000, web app on http://localhost:5173
+```
+
+The modelling scripts and Streamlit apps have their own setup. See the write-ups below.
+
+## Project write-ups
+
+<details>
+<summary><b>Data: sources, licences, committed tables</b></summary>
 
 Three progressively harder machine learning projects built on Transfermarkt
 football data, working up from regression to classification to unsupervised
@@ -11,8 +66,6 @@ clustering.
 | 01 | **value-predictor** | Linear regression | Complete, with a Streamlit app for interactive predictions |
 | 02 | **match-predictor** | Classification | Complete, with a Streamlit app for match forecasts |
 | 03 | **style-finder** | K-Means clustering | Complete |
-
----
 
 ## Data
 
@@ -65,7 +118,10 @@ without downloading anything:
 
 You only need `data/raw/` if you want to re-run `clean.py` or change a filter.
 
----
+</details>
+
+<details>
+<summary><b>01 Value predictor: result, modelling decisions, app, limitations</b></summary>
 
 ## 01-value-predictor
 
@@ -102,6 +158,8 @@ to read into it.
 The three are indistinguishable — the spread is far inside the fold noise.
 Ridge selects α ≈ 0.17 and Lasso zeroes out no features, meaning both are
 declining to regularise. **Plain `LinearRegression` is what ships.**
+
+![5-fold cross-validation](01-value-predictor/plots/06_cv_results.png)
 
 ### Modelling decisions
 
@@ -211,6 +269,8 @@ nothing about who they play for or how good they are. Consequences:
 R² ≈ 0.73 is roughly the ceiling here. Getting past it needs club strength or
 share-of-available-minutes, not more model tuning.
 
+![Predicted vs actual, out-of-fold, EUR](01-value-predictor/plots/07_residuals.png)
+
 **Survivorship bias is limited, not eliminated.** The 2024/2025 filter removes
 the retiree problem, but 170 of 973 Premier League players still have a null
 target and are dropped. Those are mostly youth and fringe players Transfermarkt
@@ -220,7 +280,10 @@ has not priced, and their absence is not random.
 community-driven appraisals. This model predicts *those appraisals*, which are
 themselves influenced by reputation and hype.
 
----
+</details>
+
+<details>
+<summary><b>02 Match predictor: result, leakage, features, app, limitations</b></summary>
 
 ## 02-match-predictor
 
@@ -339,6 +402,8 @@ direction in it. Worth noting what it *does* get right: across the 2,967 matches
 in the app it predicts 682 draws against 686 that actually occurred. It has the
 right *number* of draws and the wrong *ones*.
 
+![Confusion matrices, Scheme A (summed over folds)](02-match-predictor/plots/01_confusion_matrices.png)
+
 **The ceiling is low and this is near it.** Max eta-squared across every engineered
 feature is 0.132; nothing separates these classes strongly. Match outcomes are
 substantially irreducible without market odds or squad-strength signals. +2.4 points
@@ -363,6 +428,8 @@ with this result.
 the dummy by the *widest* margin (+0.076) — the dummy collapses when home advantage
 evaporates while the models hold near 46%.
 
+![Accuracy by test season (Scheme A)](02-match-predictor/plots/02_accuracy_by_season.png)
+
 ### Future work, deliberately deferred
 
 - **HGB hyperparameter tuning** — the train/test gap noted above points at
@@ -374,7 +441,10 @@ evaporates while the models hold near 46%.
 Neither was attempted in this pass. Chasing a better number with ad hoc tuning after
 seeing the results is how CV estimates become fiction.
 
----
+</details>
+
+<details>
+<summary><b>03 Activity profiles: result, weak structure, clustering decisions, limitations</b></summary>
 
 ## 03-style-finder
 
@@ -400,6 +470,8 @@ python 03-style-finder/train_final.py   # fit and persist -> model.joblib + assi
 
 Most central player in each: Ollie Watkins, Diogo Dalot, Marc Cucurella,
 Marcus Tavernier.
+
+![Cluster feature means](03-style-finder/plots/03_cluster_profiles.png)
 
 ### The clustering is least trustworthy exactly where it is most interesting
 
@@ -444,6 +516,8 @@ structure. K-Means always returns k clusters — that is what the algorithm does
 a partition existing is not evidence that natural groups exist. Here it is largely
 **imposing divisions on a continuous cloud**, which the PCA scatter shows directly:
 one blob, not four islands.
+
+![PCA projection, display only](03-style-finder/plots/04_pca_scatter.png)
 
 The output is still a useful summary of how Premier League minutes get spent. It is
 not a discovery of natural archetypes, and nothing in this repo describes it as one.
@@ -565,7 +639,10 @@ groupings persist year to year is unknown.
 **The feature groups are unbalanced 5 / 2 / 3**, which is upstream of every result
 above — see the group-imbalance note.
 
----
+</details>
+
+<details>
+<summary><b>Ideas parked for later</b></summary>
 
 ## Ideas parked for later
 
@@ -625,7 +702,10 @@ show in the gap between forecast and result.
   to year is untestable from a single-season dataset. Would need a second season of
   the same stats.
 
----
+</details>
+
+<details>
+<summary><b>Setup for the modelling scripts</b></summary>
 
 ## Setup
 
@@ -636,7 +716,10 @@ pip install pandas==2.3.3 numpy==2.4.6 scikit-learn==1.9.0 matplotlib==3.11.1 st
 Built against pandas 2.3.3, numpy 2.4.0, scikit-learn 1.9.0, matplotlib 3.11.1
 on Python 3.12.
 
----
+</details>
+
+<details>
+<summary><b>Repository layout</b></summary>
 
 ## Repository layout
 
@@ -669,7 +752,7 @@ data/
     processed/    both derived tables (committed)
 ```
 
----
+</details>
 
 ## Licensing
 
