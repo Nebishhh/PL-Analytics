@@ -104,6 +104,57 @@ typecheck, build into ignored output, and audit. It must not run `clean.py`,
 commit, publish, or deploy. A step that would change a protected file is a §0
 violation whether it runs locally or in CI.
 
+### 0.3 Permitted exception: the Vercel deployment entrypoint
+
+Four files outside `backend/` and `frontend/` may be created and maintained:
+**`vercel.json`**, **`api/index.py`**, **`requirements.txt`** and
+**`.python-version`** at the repository root. Vercel reads each only from the
+project root, so none of them can live under `backend/` or `frontend/`.
+
+The exception covers those four files. It does not extend to other root files,
+other files under `api/`, `.vercelignore`, or anything §0 lists.
+
+- `api/index.py` may only import `backend.app:app`. It defines no routes, loads
+  no artefact and calls no model. §2.1 applies to it exactly as to `backend/`.
+- The root `requirements.txt` is the single source of the pinned stack.
+  `backend/requirements.txt` contains only `-r ../requirements.txt`, so CI and
+  local installs keep their existing command.
+- `.python-version` must match the `python-version` CI tests against.
+- `vercel.json` may only install, build into ignored output, route, and include
+  or exclude files. It must not run `clean.py`, `train_final.py` or
+  `cluster.py`, or write to any artefact or `data/processed/**`.
+
+§7's additive check and its `predict_proba` grep are extended to cover exactly
+these paths.
+
+#### Rejected alternatives (§7.3)
+
+Three alternatives were evaluated and not adopted:
+
+- **Vercel Services** (Beta at the time). Services is Vercel's documented route
+  for a Python backend beside another framework, but a service is built from
+  its own root. A `backend/` root cannot reach the artefacts in
+  `01-value-predictor/`, `02-match-predictor/`, `03-style-finder/` and
+  `data/processed/`, and it breaks the package-relative imports
+  (`from . import ...`) the backend uses. Moving the artefacts is forbidden by
+  §0. A repository-root service was undocumented on where it looks up Python
+  dependencies, so it could not be planned against.
+- **The FastAPI framework preset** (a root `pyproject.toml` with
+  `tool.vercel.entrypoint = "backend.app:app"`). The preset routes every
+  request to the app, so the single-page-app fallback for `BrowserRouter`
+  routes would have had to be added to `backend/app.py` — a deployment concern
+  moved into the backend — and it would have added a root `pyproject.toml`.
+- **A root `requirements.txt` containing only `-r backend/requirements.txt`.**
+  This was the first version. uv and pip both resolve it, but Vercel's build
+  parses the file itself before installing and failed with "Error parsing
+  included file ... at position 0". Copying the pins into both files was also
+  rejected: two lists of pins will eventually disagree.
+
+The file-based `api/` function with `"framework": null` keeps the backend
+unchanged and the deployment surface to the four files above. Revisit if
+Services leaves Beta with documented support for shared files outside a
+service root.
+
 ---
 
 ## 1. Binding technical decisions
@@ -388,15 +439,15 @@ python -c "import joblib; [print(p, sorted(joblib.load(p).keys())) for p in ['01
 ```
 
 ```bash
-if git status --porcelain --untracked-files=all | grep -vE '^\?\? (backend|frontend)/|^ M (backend|frontend)/|^(\?\?|M | M) \.github/workflows/ci\.yml$'; then
-  echo "NOT additive: the lines above are outside backend/ and frontend/" >&2; false
+if git status --porcelain --untracked-files=all | grep -vE '^\?\? (backend|frontend)/|^ M (backend|frontend)/|^(\?\?|M | M) \.github/workflows/ci\.yml$|^(\?\?|M | M) (vercel\.json|api/index\.py|requirements\.txt|\.python-version)$'; then
+  echo "NOT additive: the lines above are outside backend/, frontend/ and the 0.2/0.3 files" >&2; false
 else
   echo "additive only - ok"
 fi
 ```
 
 ```bash
-grep -rn --include="*.py" -E "\.predict_proba\s*\(" backend/ | grep -v "/tests/" && echo "VIOLATION of 2.1" || echo "OOF constraint intact"
+grep -rn --include="*.py" -E "\.predict_proba\s*\(" backend/ api/index.py | grep -v "/tests/" && echo "VIOLATION of 2.1" || echo "OOF constraint intact"
 ```
 
 Three details in that command are load-bearing, and the first version of it

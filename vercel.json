@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix frontend",
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{backend/**,0[1-3]-*/model.joblib,0[1-3]-*/plots/**,02-match-predictor/oof_predictions.csv,03-style-finder/cluster_assignments.csv,data/processed/**}",
+      "excludeFiles": "{frontend/**,archive/**,backend/tests/**,.github/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)",   "destination": "/api/index" },
+    { "source": "/plots/(.*)", "destination": "/api/index" },
+    { "source": "/(.*)",       "destination": "/index.html" }
+  ]
+}
