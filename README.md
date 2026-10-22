@@ -240,7 +240,8 @@ that range, and flags the two known failure modes (ageing veterans, and
 under-predicted defenders and goalkeepers) when they apply.
 
 One caveat on the range itself: ×1.75 is a *typical-error* band, not a
-confidence interval. The actual value falls inside it for 59% of players.
+confidence interval. The actual value falls inside it for 58% of players,
+measured out of fold (59% in sample).
 
 ### Known limitations
 
