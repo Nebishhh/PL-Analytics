@@ -489,8 +489,10 @@ know before using these labels for anything.
 
 ### Silhouette never exceeds 0.24 — this project's "nothing beats the dummy"
 
-Project 02 asked whether any model beat a 45.2% always-home-win baseline. The
-answer was yes, modestly. **The equivalent question here gets a much weaker
+Project 02 asked whether any model beat always predicting a home win. Home wins
+are 45.2% of all 4,616 matches; on the 2,967 test matches the always-home-win
+baseline scores 0.446. The answer was yes, modestly. **The equivalent question
+here gets a much weaker
 answer.**
 
 | k | Inertia drop | Silhouette |
