@@ -23,19 +23,6 @@ Source = Literal["model_inference", "precomputed_out_of_fold",
                  "precomputed_assignment"]
 
 
-# --- shared -------------------------------------------------------------------
-
-class BandCoverage(BaseModel):
-    in_sample: float
-    out_of_fold: float
-    n: int
-    method: str
-    cv_scheme: str
-    quote_this: str = Field(
-        description="Which of the two figures a UI should display."
-    )
-
-
 # --- 01 value -----------------------------------------------------------------
 
 class ValuePlayer(BaseModel):
